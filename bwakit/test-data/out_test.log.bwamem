@@ -1,0 +1,12 @@
+[M::bwa_idx_load_from_disk] read 2910 ALT contigs
+[M::process] read 200 sequences (50200 bp)...
+[M::process] 0 single-end sequences; 200 paired-end sequences
+[M::mem_pestat] # candidate unique pairs for (FF, FR, RF, RR): (0, 0, 0, 0)
+[M::mem_pestat] skip orientation FF as there are not enough pairs
+[M::mem_pestat] skip orientation FR as there are not enough pairs
+[M::mem_pestat] skip orientation RF as there are not enough pairs
+[M::mem_pestat] skip orientation RR as there are not enough pairs
+[M::mem_process_seqs] Processed 200 reads in 0.022 CPU sec, 0.022 real sec
+[main] Version: 0.7.17-r1188
+[main] CMD: /home/padge/miniconda3/envs/bwakit/bin/bwa mem -p hs38DH.fa -
+[main] Real time: 0.104 sec; CPU: 0.050 sec
