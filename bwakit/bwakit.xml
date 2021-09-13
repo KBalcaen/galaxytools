@@ -138,9 +138,15 @@
             <param name="fastq_input1" value="bwa-mem-fastq1.fq" />
             <output name="bam_output" file="out_test.aln.bam" ftype="bam" lines_diff="2" />
         </test>
+        <test>
+            <param name="reference_source_selector" value="history" />
+            <param name="ref_file" value="bwa-mem-mt-genome.fa"/>
+            <param name="fastq_input1" value="bwa-mem-fastq1.fq" />
+            <output name="bam_output" file="out_test1.aln.bam" ftype="bam" lines_diff="2" />
+        </test>
     </tests>
     <help>
-
+<![CDATA[
 **BWAKIT options**
 
 run-gen-ref options::
@@ -208,6 +214,7 @@ Output files:
 {-o}.hla.top - best genotypes for the 6 classical HLA genes (if there are HLA-* contigs)
 {-o}.hla.all - additional HLA genotypes consistent with data
 {-o}.log.*   - log files
+]]>
     </help>
     <citations>
       <citation type="doi">10.1093/bioinformatics/btp698</citation>
