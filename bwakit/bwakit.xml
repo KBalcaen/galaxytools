@@ -2,7 +2,7 @@
 <tool id="bwa_kit_test" name="Map with BWA-MEM" version="0.0.1">
     <description>- map medium and long reads</description>
     <requirements>
-        <requirement type="package" version="0.7.15">bwakit</requirement>
+        <requirement type="package" version="0.7.17.dev1">bwakit</requirement>
     </requirements>
     <command detect_errors="exit_code"><![CDATA[
     ## Build reference
@@ -33,14 +33,27 @@
 
     ## Begin BWA-MEM command line
     ## mapping
+    #if str( $fastq_input.fastq_input_selector ) == "paired":
+        ln -s '${fastq_input.fastq_input1}' 'read1.fq' &&
+        ln -s '${fastq_input.fastq_input2}' 'read2.fq' ;
+
+    #elif str( $fastq_input.fastq_input_selector ) == "paired_collection":
+        '${reference_fasta_filename}'
+        '${fastq_input.fastq_input1.forward}' '${fastq_input.fastq_input1.reverse}'
+    #else:
+        '${reference_fasta_filename}'
+        '${fastq_input.fastq_input1}'
+    #end if
+
     run-bwamem
 
+    -s
+
     -t "\${GALAXY_SLOTS:-4}"
-    -v 1                                                                     ## Verbosity is set to 1 (errors only)
+    
+    -o out_prefix
 
-    -o ${bam_output}
-
-    #if $hla_typing.set_hla_typing
+    #if $hla_typing
         -H
     #end if
 
@@ -55,7 +68,9 @@
         '${fastq_input.fastq_input1}'
     #end if
       
-
+    | sh ; 
+    cp out_prefix.aln.bam ${bam_output} ;
+    cp out_prefix.log.bwamem ${log_output} 
     ]]></command>
 
     <inputs>
@@ -115,35 +130,36 @@
                 <param name="fastq_input1" format="fastqsanger,fastqsanger.gz,fasta" type="data_collection" collection_type="paired" label="Select a paired collection" help="See help section for an explanation of dataset collections"/>
             </when>
         </conditional>
-
-        <conditional name="hla_typing">
-            <param name="set_hla_typing" type="boolean" label="Set Algorithm Parameters">
-            </param>
-        </conditional>
+        <param name="hla_typing" type="boolean" label="Set Algorithm Parameters" truevalue="-H" falsevalue="" optional="true">
+        </param>
     </inputs>
 
     <outputs>
         <data format="bam" name="bam_output" label="${tool.name} on ${on_string} (mapped reads in BAM format)"/>
-        <data format="hla.top" name="hla_genotypes" />
-        <data format="hla.all" name="all_genotypes" />
+        <data format="txt" name="log_output" label="${tool.name} on ${on_string}: log" />
+        <data format="txt" name="hla_genotypes" />
+        <data format="txt" name="all_genotypes" />
     </outputs>
 
     <tests>
         <!-- header describing command-line will always be different - 
              hence lines_diff="2" on output tag. -->
         <test>
+            <param name="reference_source_selector" value="history" />
+            <param name="ref_file" value="bwa-mem-mt-genome.fa"/>
+            <param name="fastq_input_selector" value="paired" />
+            <param name="fastq_input1" value="bwa-mem-fastq1.fq" />
+            <param name="fastq_input2" value="bwa-mem-fastq2.fq" />
+            <output name="bam_output" file="out_bam.aln.bam" ftype="bam" lines_diff="4" />
+            <output name="log_output" file="out_bam.log.bwamem" lines_diff="6" />
+        </test>
+        <!-- <test>
             <param name="reference_source_selector" value="download" />
-            <!-- <param name="reference_source_selector" value="history" /> -->
+            <param name="reference_source_selector" value="history" />
             <param name="ref_file" value="hs38DH"/>
             <param name="fastq_input1" value="bwa-mem-fastq1.fq" />
             <output name="bam_output" file="out_test.aln.bam" ftype="bam" lines_diff="2" />
-        </test>
-        <test>
-            <param name="reference_source_selector" value="history" />
-            <param name="ref_file" value="bwa-mem-mt-genome.fa"/>
-            <param name="fastq_input1" value="bwa-mem-fastq1.fq" />
-            <output name="bam_output" file="out_test1.aln.bam" ftype="bam" lines_diff="2" />
-        </test>
+        </test> -->
     </tests>
     <help>
 <![CDATA[
@@ -151,69 +167,69 @@
 
 run-gen-ref options::
 
-Usage: /home/padge/miniconda3/envs/bwakit/bin/run-gen-ref <hs38|hs38a|hs38DH|hs37|hs37d5>
-Analysis sets:
-  hs38     primary assembly of GRCh38 (incl. chromosomes, unplaced and unlocalized contigs) and EBV
-  hs38a    hs38 plus ALT contigs
-  hs38DH   hs38a plus decoy contigs and HLA genes (recommended for GRCh38 mapping)
-  hs37     primary assembly of GRCh37 (used by 1000g phase 1) plus the EBV genome
-  hs37d5   hs37 plus decoy contigs (used by 1000g phase 3)
+    Usage: /home/padge/miniconda3/envs/bwakit/bin/run-gen-ref <hs38|hs38a|hs38DH|hs37|hs37d5>
+    Analysis sets:
+    hs38     primary assembly of GRCh38 (incl. chromosomes, unplaced and unlocalized contigs) and EBV
+    hs38a    hs38 plus ALT contigs
+    hs38DH   hs38a plus decoy contigs and HLA genes (recommended for GRCh38 mapping)
+    hs37     primary assembly of GRCh37 (used by 1000g phase 1) plus the EBV genome
+    hs37d5   hs37 plus decoy contigs (used by 1000g phase 3)
 
-Note: This script downloads human reference genomes. For hs38a and hs38DH, it needs additional
-      sequences and ALT-to-REF mapping included in the bwa.kit package.
+    Note: This script downloads human reference genomes. For hs38a and hs38DH, it needs additional
+        sequences and ALT-to-REF mapping included in the bwa.kit package.
 
 run-bwamem options::
 
-Usage:   run-bwamem [options] <idxbase> <file1> [file2]
+    Usage:   run-bwamem [options] <idxbase> <file1> [file2]
 
-Options: -o STR    prefix for output files                       [inferred from input]
-         -R STR    read group header line such as '@RG\tID:foo\tSM:bar'         [null]
-         -x STR    read type: pacbio, ont2d or intractg                      [default]
-                   intractg: intra-species contig (kb query, highly similar)
-                   pacbio:   pacbio subreads (~10kb query, high error rate)
-                   ont2d:    Oxford Nanopore reads (~10kb query, higher error rate)
-         -t INT    number of threads                                               [1]
+    Options: -o STR    prefix for output files                       [inferred from input]
+            -R STR    read group header line such as '@RG\tID:foo\tSM:bar'         [null]
+            -x STR    read type: pacbio, ont2d or intractg                      [default]
+                    intractg: intra-species contig (kb query, highly similar)
+                    pacbio:   pacbio subreads (~10kb query, high error rate)
+                    ont2d:    Oxford Nanopore reads (~10kb query, higher error rate)
+            -t INT    number of threads                                               [1]
 
-         -H        apply HLA typing
-         -a        trim HiSeq2000/2500 PE resequencing adapters (via trimadap)
-         -d        mark duplicate (via samblaster)
-         -S        for BAM input, don't shuffle
-         -s        sort the output alignment (via samtools; requring more RAM)
-         -k        keep temporary files generated by typeHLA
-         -M        mark shorter split hits as secondary
+            -H        apply HLA typing
+            -a        trim HiSeq2000/2500 PE resequencing adapters (via trimadap)
+            -d        mark duplicate (via samblaster)
+            -S        for BAM input, don't shuffle
+            -s        sort the output alignment (via samtools; requring more RAM)
+            -k        keep temporary files generated by typeHLA
+            -M        mark shorter split hits as secondary
 
-Examples:
+    Examples:
 
-* Map paired-end reads to GRCh38+ALT+decoy+HLA and perform HLA typing:
+    * Map paired-end reads to GRCh38+ALT+decoy+HLA and perform HLA typing:
 
-    run-bwamem -o prefix -t8 -HR"@RG\tID:foo\tSM:bar" hs38DH.fa read1.fq.gz read2.fq.gz
+        run-bwamem -o prefix -t8 -HR"@RG\tID:foo\tSM:bar" hs38DH.fa read1.fq.gz read2.fq.gz
 
-Note: HLA typing is only effective for high-coverage data. The typing accuracy varies
-with the quality of input. It is only intended for research purpose, not for diagnostic.
+    Note: HLA typing is only effective for high-coverage data. The typing accuracy varies
+    with the quality of input. It is only intended for research purpose, not for diagnostic.
 
-* Remap coordinate-sorted BAM, transfer read groups tags, trim Illumina PE adapters and
-sort the output. The BAM may contain single-end or paired-end reads, or a mixture of
-the two types. Specifying -R stops read group transfer.
+    * Remap coordinate-sorted BAM, transfer read groups tags, trim Illumina PE adapters and
+    sort the output. The BAM may contain single-end or paired-end reads, or a mixture of
+    the two types. Specifying -R stops read group transfer.
 
-    run-bwamem -sao prefix hs38DH.fa old-srt.bam
+        run-bwamem -sao prefix hs38DH.fa old-srt.bam
 
-Note: the adaptor trimmer included in bwa.kit is chosen because it fits the current
-mapping pipeline better. It is conservative and suboptimal. A more sophisticated
-trimmer is recommended if this becomes a concern.
+    Note: the adaptor trimmer included in bwa.kit is chosen because it fits the current
+    mapping pipeline better. It is conservative and suboptimal. A more sophisticated
+    trimmer is recommended if this becomes a concern.
 
-* Remap name-grouped BAM and mark duplicates:
+    * Remap name-grouped BAM and mark duplicates:
 
-    run-bwamem -Sdo prefix hs38DH.fa old-unsrt.bam
+        run-bwamem -Sdo prefix hs38DH.fa old-unsrt.bam
 
-Note: streamed duplicate marking requires all reads from a single paired-end library
-to be aligned at the same time.
+    Note: streamed duplicate marking requires all reads from a single paired-end library
+    to be aligned at the same time.
 
-Output files:
+    Output files:
 
-{-o}.aln.bam - final alignment
-{-o}.hla.top - best genotypes for the 6 classical HLA genes (if there are HLA-* contigs)
-{-o}.hla.all - additional HLA genotypes consistent with data
-{-o}.log.*   - log files
+    {-o}.aln.bam - final alignment
+    {-o}.hla.top - best genotypes for the 6 classical HLA genes (if there are HLA-* contigs)
+    {-o}.hla.all - additional HLA genotypes consistent with data
+    {-o}.log.*   - log files
 ]]>
     </help>
     <citations>

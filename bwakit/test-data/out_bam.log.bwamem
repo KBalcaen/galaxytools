@@ -1,0 +1,16 @@
+[M::bwa_idx_load_from_disk] read 0 ALT contigs
+[M::process] read 200 sequences (50200 bp)...
+[M::process] 0 single-end sequences; 200 paired-end sequences
+[M::mem_pestat] # candidate unique pairs for (FF, FR, RF, RR): (0, 99, 0, 0)
+[M::mem_pestat] skip orientation FF as there are not enough pairs
+[M::mem_pestat] analyzing insert size distribution for orientation FR...
+[M::mem_pestat] (25, 50, 75) percentile: (171, 199, 227)
+[M::mem_pestat] low and high boundaries for computing mean and std.dev: (59, 339)
+[M::mem_pestat] mean and std.dev: (192.97, 35.99)
+[M::mem_pestat] low and high boundaries for proper pairs: (3, 395)
+[M::mem_pestat] skip orientation RF as there are not enough pairs
+[M::mem_pestat] skip orientation RR as there are not enough pairs
+[M::mem_process_seqs] Processed 200 reads in 0.041 CPU sec, 0.041 real sec
+[main] Version: 0.7.17-r1188
+[main] CMD: /home/padge/miniconda3/envs/bwakit/bin/bwa mem -p ./test-data/bwa-mem-mt-genome.fa -
+[main] Real time: 0.043 sec; CPU: 0.045 sec
