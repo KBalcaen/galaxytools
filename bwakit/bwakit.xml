@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<tool id="bwa_kit_test" name="Map with BWA-MEM" version="0.0.1">
+<tool id="bwa_kit_test" name="Map with bwakit" version="0.0.1">
     <description>- map medium and long reads</description>
     <requirements>
         <requirement type="package" version="0.7.17.dev1">bwakit</requirement>
@@ -70,7 +70,9 @@
       
     | sh ; 
     cp out_prefix.aln.bam ${bam_output} ;
-    cp out_prefix.log.bwamem ${log_output} 
+    cp out_prefix.log.bwamem ${log_output} ;
+    ## cp out_prefix.hla.top ${hla_genotypes} ;
+    ## cp out_prefix.hla.all ${all_genotypes} ;
     ]]></command>
 
     <inputs>
@@ -137,8 +139,8 @@
     <outputs>
         <data format="bam" name="bam_output" label="${tool.name} on ${on_string} (mapped reads in BAM format)"/>
         <data format="txt" name="log_output" label="${tool.name} on ${on_string}: log" />
-        <data format="txt" name="hla_genotypes" />
-        <data format="txt" name="all_genotypes" />
+        <data format="txt" name="hla_genotypes" label="${tool.name} on ${on_string}: best genotypes for the 6 HLA genes" />
+        <data format="txt" name="all_genotypes" label="${tool.name} on ${on_string}: additional HLA genotypes" />
     </outputs>
 
     <tests>
@@ -155,7 +157,6 @@
         </test>
         <!-- <test>
             <param name="reference_source_selector" value="download" />
-            <param name="reference_source_selector" value="history" />
             <param name="ref_file" value="hs38DH"/>
             <param name="fastq_input1" value="bwa-mem-fastq1.fq" />
             <output name="bam_output" file="out_test.aln.bam" ftype="bam" lines_diff="2" />
