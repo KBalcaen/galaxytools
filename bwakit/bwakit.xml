@@ -17,7 +17,8 @@
         '${reference_fasta_filename}' &&
 
     #elif str( $reference_source.reference_source_selector ) == "download":
-        #set $reference_fasta_filename = '${reference_source.ref_file}.fa'
+        #set $reference_fasta_filename = $reference_source.ref_file +'.fa'
+        ##'$reference_fasta_filename' &&
         run-gen-ref '$reference_source.ref_file' &&
         bwa index 
         #if str($reference_source.index_a) != 'auto'
@@ -71,8 +72,15 @@
     | sh ; 
     cp out_prefix.aln.bam ${bam_output} ;
     cp out_prefix.log.bwamem ${log_output} ;
-    ## cp out_prefix.hla.top ${hla_genotypes} ;
-    ## cp out_prefix.hla.all ${all_genotypes} ;
+    if [ -f 'out_prefix.hla.top' ]; then
+        mkdir top_hla;
+        cp out_prefix.hla.top top_hla/top.txt;
+    fi ;
+
+    if [ -f 'out_prefix.hla.all' ]; then
+        mkdir all_hla;
+        cp out_prefix.hla.all all_hla/all.txt;
+    fi ;
     ]]></command>
 
     <inputs>
@@ -132,20 +140,24 @@
                 <param name="fastq_input1" format="fastqsanger,fastqsanger.gz,fasta" type="data_collection" collection_type="paired" label="Select a paired collection" help="See help section for an explanation of dataset collections"/>
             </when>
         </conditional>
-        <param name="hla_typing" type="boolean" label="Set Algorithm Parameters" truevalue="-H" falsevalue="" optional="true">
+        <param name="hla_typing" type="boolean" label="Apply HLA typing" truevalue="-H" falsevalue="" optional="true">
         </param>
     </inputs>
 
     <outputs>
         <data format="bam" name="bam_output" label="${tool.name} on ${on_string} (mapped reads in BAM format)"/>
         <data format="txt" name="log_output" label="${tool.name} on ${on_string}: log" />
-        <data format="txt" name="hla_genotypes" label="${tool.name} on ${on_string}: best genotypes for the 6 HLA genes" />
-        <data format="txt" name="all_genotypes" label="${tool.name} on ${on_string}: additional HLA genotypes" />
+        <data format="txt" name="hla_genotypes" label="${tool.name} on ${on_string}: best genotypes for the 6 classical HLA genes"> 
+            <discover_datasets pattern="__designation_and_ext__" directory="top_hla" visible="true" />       
+        </data>
+        <data format="txt" name="all_genotypes" label="${tool.name} on ${on_string}: additional HLA genotypes"> 
+            <discover_datasets pattern="__designation_and_ext__" directory="all_hla" visible="true" />       
+        </data>
     </outputs>
 
     <tests>
         <!-- header describing command-line will always be different - 
-             hence lines_diff="2" on output tag. -->
+             hence lines_diff="4" on output tag. -->
         <test>
             <param name="reference_source_selector" value="history" />
             <param name="ref_file" value="bwa-mem-mt-genome.fa"/>
@@ -155,12 +167,14 @@
             <output name="bam_output" file="out_bam.aln.bam" ftype="bam" lines_diff="4" />
             <output name="log_output" file="out_bam.log.bwamem" lines_diff="6" />
         </test>
-        <!-- <test>
-            <param name="reference_source_selector" value="download" />
-            <param name="ref_file" value="hs38DH"/>
+        <test>
+            <param name="reference_source_selector" value="cached" />
+            <param name="ref_file" value="bwa-mem-mt-genome"/>
+            <param name="fastq_input_selector" value="paired" />
             <param name="fastq_input1" value="bwa-mem-fastq1.fq" />
-            <output name="bam_output" file="out_test.aln.bam" ftype="bam" lines_diff="2" />
-        </test> -->
+            <param name="fastq_input2" value="bwa-mem-fastq2.fq" />
+            <output name="bam_output" file="out_bam.aln.bam" ftype="bam" lines_diff="4" />
+        </test>
     </tests>
     <help>
 <![CDATA[

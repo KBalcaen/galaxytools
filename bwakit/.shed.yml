@@ -1,0 +1,10 @@
+categories:
+- Next Gen Mappers
+description: 'Wrapper for bwa mem, aln, sampe, and samse'
+long_description: |
+  A collection of Galaxy bwa wrappers based on version 0.7.17.
+name: bwakit
+owner: padge
+remote_repository_url: https://github.com/usegalaxy-be/galaxytools/blob/main/bwakit
+homepage_url: https://sourceforge.net/projects/bio-bwa/files/bwakit/
+type: unrestricted
