@@ -1,0 +1,391 @@
+<tool name="gtf_to_bed" id="gtf_to_bed" version="0.01">
+  <!--Source in git at: https://github.com/fubar2/toolfactory-->
+  <!--Created by admin@galaxy.org at 29/09/2021 09:26:48 using the Galaxy Tool Factory.-->
+  <description>Takes as input a GTF file and writes a BED file in 12 column format</description>
+  <requirements>
+    <requirement type="package">perl</requirement>
+  </requirements>
+  <stdio>
+    <exit_code range="1:" level="fatal"/>
+  </stdio>
+  <version_command><![CDATA[echo "0.01"]]></version_command>
+  <command><![CDATA[perl
+$runme
+$input_gtf
+$converted_from_gtf]]></command>
+  <configfiles>
+    <configfile name="runme"><![CDATA[#raw
+
+#!/usr/bin/perl
+# written by Guy Bottu for the GenePattern server of VIB BioinforlmaticsCore,
+# takes as input a GTF file and writes a BED file in 12 column format
+# with information about transcripts, for use with RSeqC.
+#
+# The "thick" information is about the coding region, ideally it goes from
+# start codon to stop codon, but is information is lacking (e.g. because
+# of missing sequence or missing annotation), we use the CDS information.
+# For some transcripts there are multiple start or stop codons. We amways
+# choose the "thick" so that is has maximum length.
+#
+# If there is no CDS information (as for ncRNA) the "thick" will have just a
+# repeat of the transcript start position, as per BED convention.
+#
+# modified for integration under GenePattern
+#
+# usage : perl gtf_to_bed.pl <GTF file> <output file>
+use List::Util qw (min max);
+
+$gtf = $ARGV[0];
+$gtf =~ /.*\/([^\/]+)\.gtf3?/;
+# print $gtf;
+$bed = $ARGV[1];
+
+open GTF, $gtf;
+open BED, ">$bed";
+LINEPARSER: while (<GTF>) {
+  if (/^#/) { next LINEPARSER } # skip comment lines
+  @fields = split /\t/;
+  $chrom = $fields[0]; $type = $fields[2]; $beginpos = $fields[3];
+    $endpos = $fields[4]; $strand = $fields[6];
+  chomp  $fields[8]; $documentation =  $fields[8];
+  $documentation =~ /transcript_id "([^"]+)";/;
+  $transcript_id = $1;
+  if ($strand ne '+' and $strand ne '-') {
+     print "WARNING : $transcript_id has strand information $strand\n";
+  }
+  if ($type eq 'transcript') {
+    $chrom{$transcript_id} = $chrom;
+    $strand{$transcript_id} =  $strand;
+    $transcript_beginpos{$transcript_id} = $beginpos;
+    $transcript_endpos{$transcript_id} = $endpos;
+  } elsif ($type eq 'exon') {
+
+    $documentation =~ /exon_number "([^"]+)";/;
+    $exon_number = $1;
+    # print $exon_number;
+    $exon_beginpos{$transcript_id}[$exon_number] = $beginpos;
+    $exon_endpos{$transcript_id}[$exon_number] = $endpos;
+  } elsif ($type eq 'start_codon') {
+    if (not exists $ORFpos{$transcript_id}[0]
+        or ($strand eq '+' and $beginpos < $ORFpos{$transcript_id}[0])
+        or ($strand eq '-' and $endpos > $ORFpos{$transcript_id}[1])) {
+      $ORFpos{$transcript_id}[0] =  $beginpos;
+      $ORFpos{$transcript_id}[1] =  $endpos;
+    }
+  } elsif ($type eq 'stop_codon') {
+    if (not exists $ORFpos{$transcript_id}[2]
+        or ($strand eq '+' and $endpos > $ORFpos{$transcript_id}[3])
+        or ($strand eq '-' and $beginpos < $ORFpos{$transcript_id}[2])) {
+      $ORFpos{$transcript_id}[2] =  $beginpos;
+      $ORFpos{$transcript_id}[3] =  $endpos;
+    }
+  } elsif ($type eq 'CDS') {
+    if (not exists $CDSpos{$transcript_id}[0]
+        or $beginpos < $CDSpos{$transcript_id}[0]) {
+      $CDSpos{$transcript_id}[0] =  $beginpos;
+    }
+    if (not exists $CDSpos{$transcript_id}[1]
+        or $endpos > $CDSpos{$transcript_id}[1]) {
+      $CDSpos{$transcript_id}[1] =  $endpos;
+    }
+  }
+}
+
+foreach $transcript_id (sort keys %transcript_beginpos) {
+  $beginpos = $transcript_beginpos{$transcript_id} - 1;
+    ## in BED numbering starts with 0, not 1 like in GTF
+  $endpos = $transcript_endpos{$transcript_id};
+  print BED "$chrom{$transcript_id}\t$beginpos\t$endpos\t$transcript_id\t0\t$strand{$transcript_id}";
+
+  if (exists $ORFpos{$transcript_id}[0] or exists $ORFpos{$transcript_id}[2]
+      or exists $CDSpos{$transcript_id}[0]) {
+    if ($strand{$transcript_id} eq '+') {
+      if (exists $ORFpos{$transcript_id}[0]) {
+        if (exists $CDSpos{$transcript_id}[0]) { # both start_codon and CDS
+          $beginthickpos = min($ORFpos{$transcript_id}[0],
+                               $CDSpos{$transcript_id}[0]);
+        } else { # only start_codon
+          $beginthickpos = $ORFpos{$transcript_id}[0];
+        }
+      } elsif (exists $CDSpos{$transcript_id}[0]) { # only CDS
+        $beginthickpos = $CDSpos{$transcript_id}[0];
+      } else { # -- (but there is a stop_codon)
+        $beginthickpos = $transcript_beginpos{$transcript_id};
+      }
+      if (exists $ORFpos{$transcript_id}[3]) {
+        if (exists $CDSpos{$transcript_id}[1]) { # both stop_codon and CDS
+          $endthickpos = max($ORFpos{$transcript_id}[3],
+                             $CDSpos{$transcript_id}[1]);
+        } else { # only stop_codon
+          $endthickpos = $ORFpos{$transcript_id}[3];
+        }
+      } elsif (exists $CDSpos{$transcript_id}[1]) { # only CDS
+        $endthickpos = $CDSpos{$transcript_id}[1];
+      } else { # -- (but there is a start_codon)
+        $endthickpos = $transcript_endpos{$transcript_id};
+      }
+    } elsif ($strand{$transcript_id} eq '-') {
+      if (exists $ORFpos{$transcript_id}[2]) {
+        if (exists $CDSpos{$transcript_id}[0]) { # both stop_codon and CDS
+          $beginthickpos = min($ORFpos{$transcript_id}[2],
+                               $CDSpos{$transcript_id}[0]);
+        } else { # only stop_codon
+          $beginthickpos = $ORFpos{$transcript_id}[2];
+        }
+      } elsif (exists $CDSpos{$transcript_id}[0]) { # only CDS
+        $beginthickpos = $CDSpos{$transcript_id}[0];
+      } else { # -- (but there is a start_codon)
+        $beginthickpos = $transcript_beginpos{$transcript_id};
+      }
+      if (exists $ORFpos{$transcript_id}[1]) {
+        if (exists $CDSpos{$transcript_id}[1]) { # both start_codon and CDS
+          $endthickpos = max($ORFpos{$transcript_id}[1],
+                             $CDSpos{$transcript_id}[1]);
+        } else { # only start_codon
+          $endthickpos = $ORFpos{$transcript_id}[1];
+        }
+      } elsif (exists $CDSpos{$transcript_id}[1]) { # only CDS
+        $endthickpos = $CDSpos{$transcript_id}[1];
+      } else { # -- (but there is a stop_codon)
+        $endthickpos = $transcript_endpos{$transcript_id};
+      }
+    }
+    $beginthickpos -= 1;
+  } else {
+    $beginthickpos = $beginpos; $endthickpos = $beginpos;
+  }
+  print BED "\t$beginthickpos\t$endthickpos";
+
+  $blocksizes = ''; $blockstarts = '';
+  $Nexons = $#{$exon_beginpos{$transcript_id}};
+    ## In some GTF files the exons of a transcript on the reverse strand
+    ## are numbered according to their position on the forward strand
+    ## and in others according to their position on the reverse strand
+  if ($Nexons == 1) {
+    $blocksizes .= $exon_endpos{$transcript_id}[1] - $exon_beginpos{$transcript_id}[1] + 1 . ',';
+    $blockstarts .= $exon_beginpos{$transcript_id}[1] - $transcript_beginpos{$transcript_id} . ',';
+  } else {
+    if ($exon_beginpos{$transcript_id}[2] > $exon_beginpos{$transcript_id}[1]) {
+      foreach $exon_number (1 .. $Nexons) {
+        $blocksizes .= $exon_endpos{$transcript_id}[$exon_number] - $exon_beginpos{$transcript_id}[$exon_number] + 1 . ',';
+        $blockstarts .= $exon_beginpos{$transcript_id}[$exon_number] - $transcript_beginpos{$transcript_id} . ',';
+      }
+    } else { # (is <)
+      for($exon_number = $Nexons ; $exon_number > 0 ; $exon_number--) {
+        $blocksizes .= $exon_endpos{$transcript_id}[$exon_number] - $exon_beginpos{$transcript_id}[$exon_number] + 1 . ',';
+        $blockstarts .= $exon_beginpos{$transcript_id}[$exon_number] - $transcript_beginpos{$transcript_id} . ',';
+      }
+    }
+  }
+  print BED "\t0\t$Nexons\t$blocksizes\t$blockstarts\n";
+}
+close( GTF );
+close( BED );
+
+#end raw]]></configfile>
+  </configfiles>
+  <inputs>
+    <param name="input_gtf" type="data" optional="false" label="input_gtf" help="Input Gene Transfer Format (.gtf) file" format="gtf,txt" multiple="false"/>
+  </inputs>
+  <outputs>
+    <data name="converted_from_gtf" format="bed" label="converted_from_gtf" hidden="false"/>
+  </outputs>
+  <tests>
+    <test>
+	    <output name="converted_from_gtf" value="test_output.bed" compare="diff" lines_diff="0"/>
+      <param name="input_gtf" value="test_input.gtf"/>
+    </test>
+  </tests>
+  <help><![CDATA[
+
+Conversion script written by Guy Bottu for the GenePattern server of VIB BioinforlmaticsCore, takes as input a GTF file and writes a BED file in 12 column format with information about transcripts, for use with RSeqC. Modified for integration under GenePattern.
+
+
+
+The "thick" information is about the coding region, ideally it goes from start codon to stop codon, but if information is lacking (e.g. because of missing sequence or missing annotation), we use the CDS information.
+
+
+
+For some transcripts there are multiple start or stop codons. We always choose the "thick" so that is has maximum length.
+
+If there is no CDS information (as for ncRNA) the "thick" will have just a repeat of the transcript start position, as per BED convention.
+
+
+
+
+
+usage : perl gtf_to_bed.pl <GTF file> <output file>
+
+ 
+
+------
+
+
+Script::
+
+    #!/usr/bin/perl
+    # written by Guy Bottu for the GenePattern server of VIB BioinforlmaticsCore,
+    # takes as input a GTF file and writes a BED file in 12 column format
+    # with information about transcripts, for use with RSeqC.
+    #
+    # The "thick" information is about the coding region, ideally it goes from
+    # start codon to stop codon, but is information is lacking (e.g. because
+    # of missing sequence or missing annotation), we use the CDS information.
+    # For some transcripts there are multiple start or stop codons. We amways
+    # choose the "thick" so that is has maximum length.
+    #
+    # If there is no CDS information (as for ncRNA) the "thick" will have just a
+    # repeat of the transcript start position, as per BED convention.
+    #
+    # modified for integration under GenePattern
+    #
+    # usage : perl gtf_to_bed.pl <GTF file> <output file>
+    use List::Util qw (min max);
+    $gtf = $ARGV[0];
+    $gtf =~ /.*\/([^\/]+)\.gtf3?/;
+    # print $gtf;
+    $bed = $ARGV[1];
+    open GTF, $gtf;
+    open BED, ">$bed";
+    LINEPARSER: while (<GTF>) {
+      if (/^#/) { next LINEPARSER } # skip comment lines
+      @fields = split /\t/;
+      $chrom = $fields[0]; $type = $fields[2]; $beginpos = $fields[3];
+        $endpos = $fields[4]; $strand = $fields[6];
+      chomp  $fields[8]; $documentation =  $fields[8];
+      $documentation =~ /transcript_id "([^"]+)";/;
+      $transcript_id = $1;
+      if ($strand ne '+' and $strand ne '-') {
+         print "WARNING : $transcript_id has strand information $strand\n";
+      }
+      if ($type eq 'transcript') {
+        $chrom{$transcript_id} = $chrom;
+        $strand{$transcript_id} =  $strand;
+        $transcript_beginpos{$transcript_id} = $beginpos;
+        $transcript_endpos{$transcript_id} = $endpos;
+      } elsif ($type eq 'exon') {
+        $documentation =~ /exon_number "([^"]+)";/;
+        $exon_number = $1;
+        # print $exon_number;
+        $exon_beginpos{$transcript_id}[$exon_number] = $beginpos;
+        $exon_endpos{$transcript_id}[$exon_number] = $endpos;
+      } elsif ($type eq 'start_codon') {
+        if (not exists $ORFpos{$transcript_id}[0]
+            or ($strand eq '+' and $beginpos < $ORFpos{$transcript_id}[0])
+            or ($strand eq '-' and $endpos > $ORFpos{$transcript_id}[1])) {
+          $ORFpos{$transcript_id}[0] =  $beginpos;
+          $ORFpos{$transcript_id}[1] =  $endpos;
+        }
+      } elsif ($type eq 'stop_codon') {
+        if (not exists $ORFpos{$transcript_id}[2]
+            or ($strand eq '+' and $endpos > $ORFpos{$transcript_id}[3])
+            or ($strand eq '-' and $beginpos < $ORFpos{$transcript_id}[2])) {
+          $ORFpos{$transcript_id}[2] =  $beginpos;
+          $ORFpos{$transcript_id}[3] =  $endpos;
+        }
+      } elsif ($type eq 'CDS') {
+        if (not exists $CDSpos{$transcript_id}[0]
+            or $beginpos < $CDSpos{$transcript_id}[0]) {
+          $CDSpos{$transcript_id}[0] =  $beginpos;
+        }
+        if (not exists $CDSpos{$transcript_id}[1]
+            or $endpos > $CDSpos{$transcript_id}[1]) {
+          $CDSpos{$transcript_id}[1] =  $endpos;
+        }
+      }
+    }
+    foreach $transcript_id (sort keys %transcript_beginpos) {
+      $beginpos = $transcript_beginpos{$transcript_id} - 1;
+        ## in BED numbering starts with 0, not 1 like in GTF
+      $endpos = $transcript_endpos{$transcript_id};
+      print BED "$chrom{$transcript_id}\t$beginpos\t$endpos\t$transcript_id\t0\t$strand{$transcript_id}";
+      if (exists $ORFpos{$transcript_id}[0] or exists $ORFpos{$transcript_id}[2]
+          or exists $CDSpos{$transcript_id}[0]) {
+        if ($strand{$transcript_id} eq '+') {
+          if (exists $ORFpos{$transcript_id}[0]) {
+            if (exists $CDSpos{$transcript_id}[0]) { # both start_codon and CDS
+              $beginthickpos = min($ORFpos{$transcript_id}[0],
+                                   $CDSpos{$transcript_id}[0]);
+            } else { # only start_codon
+              $beginthickpos = $ORFpos{$transcript_id}[0];
+            }
+          } elsif (exists $CDSpos{$transcript_id}[0]) { # only CDS
+            $beginthickpos = $CDSpos{$transcript_id}[0];
+          } else { # -- (but there is a stop_codon)
+            $beginthickpos = $transcript_beginpos{$transcript_id};
+          }
+          if (exists $ORFpos{$transcript_id}[3]) {
+            if (exists $CDSpos{$transcript_id}[1]) { # both stop_codon and CDS
+              $endthickpos = max($ORFpos{$transcript_id}[3],
+                                 $CDSpos{$transcript_id}[1]);
+            } else { # only stop_codon
+              $endthickpos = $ORFpos{$transcript_id}[3];
+            }
+          } elsif (exists $CDSpos{$transcript_id}[1]) { # only CDS
+            $endthickpos = $CDSpos{$transcript_id}[1];
+          } else { # -- (but there is a start_codon)
+            $endthickpos = $transcript_endpos{$transcript_id};
+          }
+        } elsif ($strand{$transcript_id} eq '-') {
+          if (exists $ORFpos{$transcript_id}[2]) {
+            if (exists $CDSpos{$transcript_id}[0]) { # both stop_codon and CDS
+              $beginthickpos = min($ORFpos{$transcript_id}[2],
+                                   $CDSpos{$transcript_id}[0]);
+            } else { # only stop_codon
+              $beginthickpos = $ORFpos{$transcript_id}[2];
+            }
+          } elsif (exists $CDSpos{$transcript_id}[0]) { # only CDS
+            $beginthickpos = $CDSpos{$transcript_id}[0];
+          } else { # -- (but there is a start_codon)
+            $beginthickpos = $transcript_beginpos{$transcript_id};
+          }
+          if (exists $ORFpos{$transcript_id}[1]) {
+            if (exists $CDSpos{$transcript_id}[1]) { # both start_codon and CDS
+              $endthickpos = max($ORFpos{$transcript_id}[1],
+                                 $CDSpos{$transcript_id}[1]);
+            } else { # only start_codon
+              $endthickpos = $ORFpos{$transcript_id}[1];
+            }
+          } elsif (exists $CDSpos{$transcript_id}[1]) { # only CDS
+            $endthickpos = $CDSpos{$transcript_id}[1];
+          } else { # -- (but there is a stop_codon)
+            $endthickpos = $transcript_endpos{$transcript_id};
+          }
+        }
+        $beginthickpos -= 1;
+      } else {
+        $beginthickpos = $beginpos; $endthickpos = $beginpos;
+      }
+      print BED "\t$beginthickpos\t$endthickpos";
+      $blocksizes = ''; $blockstarts = '';
+      $Nexons = $#{$exon_beginpos{$transcript_id}};
+        ## In some GTF files the exons of a transcript on the reverse strand
+        ## are numbered according to their position on the forward strand
+        ## and in others according to their position on the reverse strand
+      if ($Nexons == 1) {
+        $blocksizes .= $exon_endpos{$transcript_id}[1] - $exon_beginpos{$transcript_id}[1] + 1 . ',';
+        $blockstarts .= $exon_beginpos{$transcript_id}[1] - $transcript_beginpos{$transcript_id} . ',';
+      } else {
+        if ($exon_beginpos{$transcript_id}[2] > $exon_beginpos{$transcript_id}[1]) {
+          foreach $exon_number (1 .. $Nexons) {
+            $blocksizes .= $exon_endpos{$transcript_id}[$exon_number] - $exon_beginpos{$transcript_id}[$exon_number] + 1 . ',';
+            $blockstarts .= $exon_beginpos{$transcript_id}[$exon_number] - $transcript_beginpos{$transcript_id} . ',';
+          }
+        } else { # (is <)
+          for($exon_number = $Nexons ; $exon_number > 0 ; $exon_number--) {
+            $blocksizes .= $exon_endpos{$transcript_id}[$exon_number] - $exon_beginpos{$transcript_id}[$exon_number] + 1 . ',';
+            $blockstarts .= $exon_beginpos{$transcript_id}[$exon_number] - $transcript_beginpos{$transcript_id} . ',';
+          }
+        }
+      }
+      print BED "\t0\t$Nexons\t$blocksizes\t$blockstarts\n";
+    }
+    close( GTF );
+    close( BED );
+
+]]></help>
+  <citations>
+    <citation type="doi">10.1093/bioinformatics/bts573</citation>
+  </citations>
+</tool>
+
