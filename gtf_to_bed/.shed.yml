@@ -1,0 +1,9 @@
+categories: 
+- Convert Formats
+description: convert gtf to bed files
+long_description: |
+   Script written by Guy Bottu for the GenePattern server of VIB BioinforlmaticsCore, takes as input a GTF file and writes a BED file in 12 column format with information about transcripts, for use with RSeqC.
+name: gtf_to_bed_script
+owner: padge
+remote_repository_url: https://github.com/usegalaxy-be/galaxytools/tree/main/gtf_to_bed
+type: unrestricted
