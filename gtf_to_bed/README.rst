@@ -1,4 +1,4 @@
-gtf_to_be
+gtf_to_bed
 =======
 
 Written by Guy Bottu for the GenePattern server of VIB BioinforlmaticsCore,
