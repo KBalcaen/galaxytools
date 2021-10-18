@@ -1,4 +1,4 @@
-bwakit
+gtf_to_bed
 =======
 
 Written by Guy Bottu for the GenePattern server of VIB BioinforlmaticsCore,
