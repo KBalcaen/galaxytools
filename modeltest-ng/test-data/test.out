@@ -1,0 +1,180 @@
+--------------------------------------------------------------------------------
+ModelTest-NG vx.y.z
+
+Input data:
+  MSA:        tiny
+  Tree:       Maximum likelihood
+    file:           -
+  #taxa:            6
+  #sites:           631
+  #patterns:        28
+  Max. thread mem:  0 MB
+
+Output:
+  Log:           test.log
+  Starting tree: test.tree
+  Results:       test.out
+
+Selection options:
+  # dna schemes:      11
+  # dna models:       88
+  include model parameters:
+    Uniform:         true
+    p-inv (+I):      true
+    gamma (+G):      true
+    both (+I+G):     true
+    free rates (+R): false
+    fixed freqs:     true
+    estimated freqs: true
+    #categories:     4
+  gamma rates mode:   mean
+  asc bias:           none
+  epsilon (opt):      0.01
+  epsilon (par):      0.05
+  keep branches:      false
+
+Additional options:
+  verbosity:        very low
+  threads:          1/4
+  RNG seed:         12345
+  subtree repeats:  enabled
+--------------------------------------------------------------------------------
+
+BIC       model              K            lnL          score          delta    weight
+--------------------------------------------------------------------------------
+       1  F81+I              4     -1053.5664      2190.9478         0.0000    0.8544
+       2  HKY+I              5     -1053.0890      2196.4404         5.4925    0.0548
+       3  F81+G4             4     -1056.5457      2196.9064         5.9586    0.0434
+       4  F81+I+G4           5     -1053.7885      2197.8393         6.8915    0.0272
+       5  TrN+I              6     -1052.5472      2201.8040        10.8561    0.0038
+       6  TPM3uf+I           6     -1052.5826      2201.8748        10.9270    0.0036
+       7  TPM2uf+I           6     -1052.6001      2201.9098        10.9620    0.0036
+       8  HKY+G4             5     -1056.0325      2202.3274        11.3796    0.0029
+       9  TPM1uf+I           6     -1053.0078      2202.7252        11.7774    0.0024
+      10  HKY+I+G4           6     -1053.3267      2203.3631        12.4153    0.0017
+--------------------------------------------------------------------------------
+Best model according to BIC
+---------------------------
+Model:              F81+I
+lnL:                -1053.5664
+Frequencies:        0.4199 0.1550 0.2022 0.2229
+Subst. Rates:       1.0000 1.0000 1.0000 1.0000 1.0000 1.0000 
+Inv. sites prop:    0.9020
+Gamma shape:        -
+Score:              2190.9478
+Weight:             0.8544
+---------------------------
+Parameter importances
+---------------------------
+P.Inv:              0.9233
+Gamma:              0.0471
+Gamma-Inv:          0.0294
+Frequencies:        1.0000
+---------------------------
+Model averaged estimates
+---------------------------
+P.Inv:              0.9019
+Alpha:              0.0212
+Alpha-P.Inv:        1.3893
+P.Inv-Alpha:        0.8536
+Frequencies:        0.4200 0.1549 0.2022 0.2229 
+
+Commands:
+  > phyml  -i tiny -m 000000 -f m -v e -a 0 -c 1 -o tlr
+  > raxmlHPC-SSE3 -s tiny -c 1 -m GTRCATIX --JC69 -n EXEC_NAME -p PARSIMONY_SEED
+  > raxml-ng --msa tiny --model F81+I
+  > paup -s tiny
+  > iqtree -s tiny -m F81+I
+
+AIC       model              K            lnL          score          delta    weight
+--------------------------------------------------------------------------------
+       1  F81+I              4     -1053.5664      2133.1328         0.0000    0.2029
+       2  HKY+I              5     -1053.0890      2134.1781         1.0452    0.1203
+       3  TrN+I              6     -1052.5472      2135.0944         1.9615    0.0761
+       4  TPM3uf+I           6     -1052.5826      2135.1652         2.0324    0.0735
+       5  TPM2uf+I           6     -1052.6001      2135.2002         2.0674    0.0722
+       6  F81+I+G4           5     -1053.7885      2135.5770         2.4442    0.0598
+       7  TIM3+I             7     -1051.9464      2135.8928         2.7600    0.0511
+       8  TPM1uf+I           6     -1053.0078      2136.0156         2.8828    0.0480
+       9  TIM2+I             7     -1052.0690      2136.1381         3.0052    0.0452
+      10  HKY+I+G4           6     -1053.3267      2136.6535         3.5206    0.0349
+--------------------------------------------------------------------------------
+Best model according to AIC
+---------------------------
+Model:              F81+I
+lnL:                -1053.5664
+Frequencies:        0.4199 0.1550 0.2022 0.2229
+Subst. Rates:       1.0000 1.0000 1.0000 1.0000 1.0000 1.0000 
+Inv. sites prop:    0.9020
+Gamma shape:        -
+Score:              2133.1328
+Weight:             0.2029
+---------------------------
+Parameter importances
+---------------------------
+P.Inv:              0.7394
+Gamma:              0.0387
+Gamma-Inv:          0.2218
+Frequencies:        1.0000
+---------------------------
+Model averaged estimates
+---------------------------
+P.Inv:              0.8996
+Alpha:              0.0212
+Alpha-P.Inv:        1.0012
+P.Inv-Alpha:        0.8066
+Frequencies:        0.4209 0.1542 0.2025 0.2225 
+
+Commands:
+  > phyml  -i tiny -m 000000 -f m -v e -a 0 -c 1 -o tlr
+  > raxmlHPC-SSE3 -s tiny -c 1 -m GTRCATIX --JC69 -n EXEC_NAME -p PARSIMONY_SEED
+  > raxml-ng --msa tiny --model F81+I
+  > paup -s tiny
+  > iqtree -s tiny -m F81+I
+
+AICc      model              K            lnL          score          delta    weight
+--------------------------------------------------------------------------------
+       1  F81+I              4     -1053.5664      2133.1328         0.0000    0.2041
+       2  HKY+I              5     -1053.0890      2134.1781         1.0452    0.1210
+       3  TrN+I              6     -1052.5472      2135.0944         1.9615    0.0765
+       4  TPM3uf+I           6     -1052.5826      2135.1652         2.0324    0.0739
+       5  TPM2uf+I           6     -1052.6001      2135.2002         2.0674    0.0726
+       6  F81+I+G4           5     -1053.7885      2135.5770         2.4442    0.0601
+       7  TIM3+I             7     -1051.9464      2135.8928         2.7600    0.0513
+       8  TPM1uf+I           6     -1053.0078      2136.0156         2.8828    0.0483
+       9  TIM2+I             7     -1052.0690      2136.1381         3.0052    0.0454
+      10  HKY+I+G4           6     -1053.3267      2136.6535         3.5206    0.0351
+--------------------------------------------------------------------------------
+Best model according to AICc
+---------------------------
+Model:              F81+I
+lnL:                -1053.5664
+Frequencies:        0.4199 0.1550 0.2022 0.2229
+Subst. Rates:       1.0000 1.0000 1.0000 1.0000 1.0000 1.0000 
+Inv. sites prop:    0.9020
+Gamma shape:        -
+Score:              2133.1328
+Weight:             0.2041
+---------------------------
+Parameter importances
+---------------------------
+P.Inv:              0.7405
+Gamma:              0.0388
+Gamma-Inv:          0.2207
+Frequencies:        1.0000
+---------------------------
+Model averaged estimates
+---------------------------
+P.Inv:              0.8996
+Alpha:              0.0212
+Alpha-P.Inv:        0.9849
+P.Inv-Alpha:        0.8059
+Frequencies:        0.4208 0.1542 0.2025 0.2225 
+
+Commands:
+  > phyml  -i tiny -m 000000 -f m -v e -a 0 -c 1 -o tlr
+  > raxmlHPC-SSE3 -s tiny -c 1 -m GTRCATIX --JC69 -n EXEC_NAME -p PARSIMONY_SEED
+  > raxml-ng --msa tiny --model F81+I
+  > paup -s tiny
+  > iqtree -s tiny -m F81+I
+Done

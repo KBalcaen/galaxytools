@@ -1,0 +1,176 @@
+<?xml version="1.0"?>
+<tool id="modeltest_ng" name="modeltest_ng" version="0.0.1">
+    <description>best-fit model of evolution for alignments</description>
+    <requirements>
+        <requirement type="package">modeltest-ng</requirement>
+    </requirements>
+    <command detect_errors="exit_code"><![CDATA[
+    ## Begin modeltest-ng command line
+    ## mapping
+
+    modeltest-ng
+
+    -p "\${GALAXY_SLOTS:-4}"
+    
+    -i '${input_msa}'
+ 
+    -o out_prefix
+
+    #if $topology.get_topologies
+        -t '${topology.topology_selector}'
+    #end if
+
+    #if $seed
+        -r '${seed}'
+    #end if
+    &&
+    cp out_prefix.out ${output} ;
+    cp out_prefix.log ${log} ;
+    cp out_prefix.tree ${ml_tree} ;
+    cp out_prefix.ckp ${checkpoint} ;
+    cp out_prefix.topos ${topos} ;
+
+    ]]></command>
+
+    <inputs>
+        <param name="input_msa" type="data" optional="false" label="input_msa" help="Alignment fasta file" format="fasta,phylip,txt" multiple="false"/>
+        <param name="seed" type="integer" optional="true" label="seed" help="sets the seed for the random number generator" multiple="false"/>
+        <conditional name="topology">
+            <param name="get_topologies" type="boolean" label="Set the starting topology">
+            </param>
+            <when value="true">
+                <param name="topology_selector" type="select" label="Select starting topology from the list">
+                    <option value="ml">maximum likelihood</option>
+                    <option value="mp">maximum parsimony</option>
+                    <option value="fixed-ml-jc">fixed maximum likelihood (JC)</option>
+                    <option value="fixed-ml-gtr">fixed maximum likelihood (GTR)</option>
+                    <option value="fixed-mp">fixed maximum parsimony</option>
+                    <option value="random">random generated tree</option>
+                    <option value="user">fixed user defined (requires -u argument)</option>
+                </param>
+            </when>
+            <when value="false">
+            </when>
+        </conditional>
+    </inputs>
+
+    <outputs>
+        <data format="txt" name="output" label="${tool.name} on ${on_string}: modeltest-ng output"/>
+        <data format="txt" name="log" label="${tool.name} on ${on_string}: log" />
+        <data format="txt" name="ml_tree" label="${tool.name} on ${on_string}: maximum-likelyhood tree"/>
+        <data format="ckpt" name="checkpoint" label="${tool.name} on ${on_string}: checkpoint file" />
+        <data format="txt" name="topos" label="${tool.name} on ${on_string}: topologies"/>
+    </outputs>
+
+    <tests>
+        <!-- header describing command-line will always be different - 
+             hence lines_diff="4" on output tag. -->
+        <test>
+            <param name="input_msa" value="tiny" />
+            <param name="get_topologies" value="true" />
+            <param name="topology_selector" value="ml" />
+            <output name="output">
+                <assert_contents>
+                    <has_text text="#sites:           631" />
+                    <has_text text="#patterns:        28" />
+                    <has_text text="       1  F81+I              4     -1053.5664      2190.9478         0.0000    0.8544" />
+                </assert_contents>                
+            </output>
+            <output name="log">
+                <assert_contents>
+                    <has_text text="#sites:           631" />
+                    <has_text text="#patterns:        28" />
+                    <has_text text="       BIC               F81+I     2190.9478        0.8544" />
+                </assert_contents>                
+            </output>
+            <output name="ml_tree" value="test.tree" />
+            <!-- <output name="checkpoint" value="test.ckp" /> -->
+            <output name="topos" value="test.topos" />
+        </test>
+        <test>
+            <param name="input_msa" value="tiny" />
+            <param name="seed" value="5" />
+            <param name="get_topologies" value="true" />
+            <param name="topology_selector" value="ml" />
+            <output name="output">
+                <assert_contents>
+                    <has_text text="  RNG seed:         5" />
+                </assert_contents>                
+            </output>
+        </test>
+    </tests>
+    <help>
+<![CDATA[
+**BWAKIT options**
+
+run-gen-ref options::
+
+    Usage: /home/padge/miniconda3/envs/bwakit/bin/run-gen-ref <hs38|hs38a|hs38DH|hs37|hs37d5>
+    Analysis sets:
+    hs38     primary assembly of GRCh38 (incl. chromosomes, unplaced and unlocalized contigs) and EBV
+    hs38a    hs38 plus ALT contigs
+    hs38DH   hs38a plus decoy contigs and HLA genes (recommended for GRCh38 mapping)
+    hs37     primary assembly of GRCh37 (used by 1000g phase 1) plus the EBV genome
+    hs37d5   hs37 plus decoy contigs (used by 1000g phase 3)
+
+    Note: This script downloads human reference genomes. For hs38a and hs38DH, it needs additional
+        sequences and ALT-to-REF mapping included in the bwa.kit package.
+
+run-bwamem options::
+
+    Usage:   run-bwamem [options] <idxbase> <file1> [file2]
+
+    Options: -o STR    prefix for output files                       [inferred from input]
+            -R STR    read group header line such as '@RG\tID:foo\tSM:bar'         [null]
+            -x STR    read type: pacbio, ont2d or intractg                      [default]
+                    intractg: intra-species contig (kb query, highly similar)
+                    pacbio:   pacbio subreads (~10kb query, high error rate)
+                    ont2d:    Oxford Nanopore reads (~10kb query, higher error rate)
+            -t INT    number of threads                                               [1]
+
+            -H        apply HLA typing
+            -a        trim HiSeq2000/2500 PE resequencing adapters (via trimadap)
+            -d        mark duplicate (via samblaster)
+            -S        for BAM input, don't shuffle
+            -s        sort the output alignment (via samtools; requring more RAM)
+            -k        keep temporary files generated by typeHLA
+            -M        mark shorter split hits as secondary
+
+    Examples:
+
+    * Map paired-end reads to GRCh38+ALT+decoy+HLA and perform HLA typing:
+
+        run-bwamem -o prefix -t8 -HR"@RG\tID:foo\tSM:bar" hs38DH.fa read1.fq.gz read2.fq.gz
+
+    Note: HLA typing is only effective for high-coverage data. The typing accuracy varies
+    with the quality of input. It is only intended for research purpose, not for diagnostic.
+
+    * Remap coordinate-sorted BAM, transfer read groups tags, trim Illumina PE adapters and
+    sort the output. The BAM may contain single-end or paired-end reads, or a mixture of
+    the two types. Specifying -R stops read group transfer.
+
+        run-bwamem -sao prefix hs38DH.fa old-srt.bam
+
+    Note: the adaptor trimmer included in bwa.kit is chosen because it fits the current
+    mapping pipeline better. It is conservative and suboptimal. A more sophisticated
+    trimmer is recommended if this becomes a concern.
+
+    * Remap name-grouped BAM and mark duplicates:
+
+        run-bwamem -Sdo prefix hs38DH.fa old-unsrt.bam
+
+    Note: streamed duplicate marking requires all reads from a single paired-end library
+    to be aligned at the same time.
+
+    Output files:
+
+    {-o}.aln.bam - final alignment
+    {-o}.hla.top - best genotypes for the 6 classical HLA genes (if there are HLA-* contigs)
+    {-o}.hla.all - additional HLA genotypes consistent with data
+    {-o}.log.*   - log files
+]]>
+    </help>
+    <citations>
+      <citation type="doi">10.1093/bioinformatics/btp698</citation>
+    </citations>
+</tool>
