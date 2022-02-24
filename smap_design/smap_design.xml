@@ -1,0 +1,123 @@
+<tool id="smap_design" name="SMAP-design" version="0.1.0" python_template_version="3.5">
+    <requirements>
+        <requirement type="package">smap-design</requirement>
+        <requirement type="package">primer3-py</requirement>
+        <requirement type="package">pandas</requirement>
+        <requirement type="package">biopython</requirement>
+        <requirement type="package">matplotlib</requirement>
+    </requirements>
+    <command detect_errors="exit_code"><![CDATA[
+        python smap 
+            --output 'SMAPdesign' 
+            --minimumAmpliconLength $min_amplicon_length 
+            --maximumAmpliconLength $max_amplicon_length 
+            --numbergRNAs $number_grnas 
+            --numberAmplicons $number_amplicons 
+            #if $print_summary:
+                --summary
+            #end if
+            #if $verbose:
+                --verbose
+            #end if
+            $input_fasta $input_gff3;
+        mv SMAPdesign.gff3 $gff_output;
+        mv SMAPdesign_primers.tsv $primers_output;
+    ]]></command>
+    <inputs>
+        <param name="input_fasta" type="data" optional="false" label="Reference FASYA file" help="Reference FASTA file" format="fasta" multiple="false"/>
+        <param name="input_gff3" type="data" optional="false" label="GFF3 File" help="GFF3 file" format="gff3" multiple="false"/>
+        <param name="number_amplicons" type="integer" optional="true" default=2 label="The maximum number of non-overlapping amplicons in the output (default = 2)" help="sets the seed for the random number generator"/>
+        <param name="number_grnas" type="integer" optional="true" default=2 label="Maximum number of gRNAs to retain per amplicon (default = 2)" help=""/>
+        <param name="min_amplicon_length" type="integer" optional="true" default=120 label="The minimum length of the amplicons in base pairs (default = 120)" help=""/>
+        <param name="max_amplicon_length" type="integer" optional="true" default=150 label="The maximum length of the amplicons in base pairs (default = 120)" help=""/>
+        <param name="distance" type="integer" optional="true" default=15 label="Minimum number of bases between primer and gRNA (default = 15)" help=""/>
+        <param name="print_summary" type="boolean" help='Write summary file and plot of the output'/>
+    parser.add_argument('-g', '--gRNAfile',
+                        help='CRISPOR, FlashFry or other gRNA design program output file. '
+                             'The CRISPOR and Flashfry file must contain a header and 12 columns. Check the manual for specifics')
+
+    parser.add_argument('-gs', '--gRNAsource',
+                        help='What is the source of the gRNA file? Enter "CRISPOR", "FlashFry" or "other" (default = FlashFry',
+                        default="FlashFry")
+
+
+    parser.add_argument('-sg', '--selectGenes',
+                        help='List of genes (one per line) to which amplicons and guides must be designed. '
+                             'The other genes in the fasta file will be used to check for specificity only (default: for all genes in the fasta the design is done)')
+
+    parser.add_argument('-go', '--gRNAoverlap',
+                        help='The minimum number of bases between the start of two gRNAs (default = 5)',
+                        default=5, type=int)
+
+    parser.add_argument('-ga', '--generateAmplicons',
+                        help='Number of amplicons to generate per gene by Primer3 (default = 150). To generate 50 amplicons per 1000 bases per gene enter -1',
+                        default=150, type=int)
+
+    parser.add_argument('-t', '--threshold',
+                        help='Minimum gRNA MIT score allowed (default = 80)',
+                        default=80, type=int)
+
+    parser.add_argument('-b', '--borderLength',
+                        help='The length of the borders (for SMAP) (default=10)',
+                        default=10, type=int)
+
+    parser.add_argument('-al', '--ampliconLabel',
+                        help='Number the amplicons from left to right instead of from best to worst',
+                        default=False, action='store_true')
+
+    parser.add_argument('-gl', '--gRNAlabel',
+                        help='Number the gRNAs from left to right instead of from best to worst',
+                        default=False, action='store_true')
+
+    parser.add_argument('-bo', '--bordersOnly',
+                        help='Write additional GFF file with only borders (for SMAP)',
+                        default=False, action='store_true')
+
+    parser.add_argument('-tr5', '--targetRegion5',
+                        help="The fraction of the coding sequencing that cannot be targeted at the 5' end as indicated by a float between 0 and 1 (default = 0.2)",
+                        default=0.2, type=float)
+
+    parser.add_argument('-tr3', '--targetRegion3',
+                        help="The fraction of the coding sequencing that cannot be targeted at the 3' end as indicated by a float between 0 and 1 (default = 0.2)",
+                        default=0.2, type=float)
+
+
+    parser.add_argument('-aa', '--allAmplicons',
+                        help='Return all amplicons with their respective gRNAs per gene (extra file)',
+                        default=False, action='store_true')
+
+    parser.add_argument('-tsr', '--targetSpecificRegion',
+                        help='Only target a specific region in the gene indicated by the feature name in the GFF file',
+                        default=None)
+
+    parser.add_argument('-mpa', '--misPrimingAllowed',
+                        help='Do not check for mispriming in the gene set when designing primers. '
+                             'By default Primer3 will not allow primers that can prime at other genes in the gene set',
+                        default=False, action='store_true')
+
+    parser.add_argument('-rpd', '--restrictPrimerDesign',
+                        help='This option will restrict primer design in large introns, increasing the speed of amplicon design. This should have no impact on the output',
+                        default=False, action='store_true')
+
+    parser.add_argument('-prom', '--promoter',
+                        help='Give the last 6 bases of the promoter that will be used to express the gRNA. This will be taken into account when checking for BsaI or BbsI sites in the gRNA'
+                             '(default: U6 promoter = GTAGTG)',
+                        default="GTAGTG")
+
+    parser.add_argument('-scaf', '--scaffold',
+                        help='Give the first 6 bases of the scaffold that will be used. This will be taken into account when checking for BsaI or BbsI sites in the gRNA'
+                             '(default = GTTTTA)',
+                        default='GTTTTA')
+
+    parser.add_argument('-db', '--debug',
+                        help='Give a gff file with all amplicons designed by Primer3 and all gRNAs before filtering',
+                        default=False, action="store_true")
+    </inputs>
+    <outputs>
+        <data format="gff3" name="gff_output" label="GFF3 design" />
+        <data format="tsv" name="primers_output" label="Primers tsv" />
+    </outputs>
+    <help><![CDATA[
+        TODO: Fill in help.
+    ]]></help>
+</tool>
