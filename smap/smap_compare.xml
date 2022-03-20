@@ -2,13 +2,14 @@
     <requirements>
         <requirement type="package">ngs-smap</requirement>
     </requirements>
-    <command detect_errors="exit_code"><![CDATA[
+<command detect_errors="exit_code"><![CDATA[
         smap compare $input_bed_1 $input_bed_2;
         mv SMAP_compare.pdf $out_pdf;
     ]]></command>
 <inputs>
         <param name="input_bed_1" type="data" optional="false" label="BED 1 File" help="BED file" format="bed" multiple="false"/>
         <param name="input_bed_2" type="data" optional="false" label="BED 2 File" help="BED file" format="bed" multiple="false"/>
+</inputs>
 <outputs>
     <data format="pdf" name="out_pdf" label="Compare output"/>
 </outputs>
