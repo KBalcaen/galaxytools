@@ -1,0 +1,170 @@
+<tool id="smap" name="SMAP" version="4.5.0">
+    <requirements>
+        <requirement type="package">ngs-smap</requirement>
+    </requirements>
+    <command detect_errors="exit_code"><![CDATA[
+
+        smap compare $input_bed_1 $input_bed_2;
+        mv SMAP_compare.pdf $out_pdf;
+
+        ## delineate
+        mkdir alignments_dir;
+        #set $input_list = []
+        #for $i, $input in enumerate($input_bams):
+            #set $safename = re.sub('[^\w\-_]', '_', $input.element_identifier)
+            #if $safename in $input_list:
+                #set $safename = str($safename) + "." + str($i)
+            #end if
+            ln -sf '${input}' 'alignments_dir/${safename}.bam' &&
+            ln -sf '${input.metadata.bam_index}' 'alignments_dir/${safename}.bai' &&
+        #end for
+        smap delineate alignments_dir 
+        -mapping_orientation $mapping_orientation
+        -p "\${GALAXY_SLOTS:-1}"
+        --plot_type png 
+        --plot $plot 
+        ## --name 2n_ind_GBS-SE 
+        --min_cluster_length $min_cluster_length
+        --max_cluster_length $max_cluster_length
+        --min_stack_depth $min_stack_depth 
+        --max_stack_depth $max_stack_depth 
+        --min_cluster_depth $min_cluster_depth
+        --max_cluster_depth $max_cluster_depth
+        --max_stack_number $max_stack_number
+        --min_stack_depth_fraction $min_stack_depth_fraction
+
+
+
+        ### haplotype sites
+        ## create output dir
+        #set $out_dir=haplotype_sites_output;  
+        mkdir $out_dir;
+        #set $out_base=hs_base
+        ## create input dir for bam and bai files
+        mkdir alignments_dir;
+        #set $input_list = []
+        #for $i, $input in enumerate($input_bams):
+            #set $safename = re.sub('[^\w\-_]', '_', $input.element_identifier)
+            #if $safename in $input_list:
+                #set $safename = str($safename) + "." + str($i)
+            #end if
+            ln -sf '${input}' 'alignments_dir/${safename}.bam' &&
+            ln -sf '${input.metadata.bam_index}' 'alignments_dir/${safename}.bai' &&
+        #end for
+        smap haplotype-sites alignments_dir $bed_sites_file $vcf_file 
+        -mapping_orientation $mapping_orientation
+        -partial $partial
+        --min_read_count $min_read_count 
+        $no_indels
+        --discrete_calls '$discrete_calls'
+        --min_haplotype_frequency $min_haplotype_frequency
+        -p "\${GALAXY_SLOTS:-1}"
+        --min_distinct_haplotypes $min_distinct_haplotypes
+        --plot_type png 
+        --plot $plot 
+        #if $frequency_interval_bounds:
+            --frequency_interval_bounds '$frequency_interval_bounds'
+        #end if
+        #if $dosage_filter:
+            --dosage_filter $dosage_filter
+        #end if
+        -o $out_dir/$out_base
+        ;
+        ## mv main outputs to corresponding file destination
+        mv $out_dir/$out_base_coordinates.tsv $out_base_coordinates;
+        mv $out_dir/$out_base_haplotype_frequencies_c0_f0_m0.tsv $haplotype_frequencies;
+        mv $out_dir/$out_base_read_counts_c0_f0_m0.tsv $read_counts;
+        #if $plot != 'nothing':
+            mv $out_dir/$out_base_haplotype_counts_frequencies.barplot.png $frequencies_barplot;
+        #end if
+        ## when using --plot all there is 1 plot per bam file named **..frequency.histogram.png
+        #if $plot == 'all':
+            ## I should use discover outputs, but can simplify it if I move them first to a specific dir and discover all png from there
+            mkdir frequency_plots;
+            mv $out_dor/*.frequency.histogram.png frequency_plots;
+        #end if
+    ]]></command>
+<inputs>
+
+        ####
+        ## compare
+        ####
+        <param name="input_bed_1" type="data" optional="false" label="BED 1 File" help="BED file" format="bed" multiple="false"/>
+        <param name="input_bed_2" type="data" optional="false" label="BED 2 File" help="BED file" format="bed" multiple="false"/>
+
+        ####
+        ## delineate
+        ####
+        <param name="input_bams" type="data" optional="false" label="GFF3 File" help="GFF3 file" format="bam" multiple="true"/>
+        <param argument="--mapping_orientation" type="select" label="Should strandedness of read mapping be considered for haplotyping?">
+            <option value="ignore" selected="True">Ignore strandedness</option>
+            <option value="stranded">Consider strandedness</option>
+        </param>
+        <param argument="--plot" type="select" label="Select which plots are to be generated.">
+            <option value="summary" selected="True">Summary (plots with information for all samples)</option>
+            <option value="all">All (per sample plots)</option>
+            <option value="nothing">Nothing</option>
+        </param>
+        <param argument="--min_mapping_quality" type="integer" value="30" label="Minimum .bam mapping quality to retain reads for analysis"./>
+        <param argument="--undefined_representation" label="Value to use for non-existing or masked data" default="NaN"/>
+        <param argument="--min_stack_depth" type="integer" value="0" label="Minimum number of reads per Stack per sample. " help="Recommended value is 3"/>
+        <param argument="--max_stack_depth" type="integer" value="infinity" label="Maximum number of reads per Stack per sample" help="Recommended value is 1500"/>
+        <param argument="--min_cluster_length" type="integer" value="0" label="Minimum Stack and StackCluster length" help="Can be used to remove Stacks and StackClusters that are either too short compared to the original read length. For separately mapped and merged reads, the minimum length may be about one-third of the original read length (trimmed, before merging and mapping)."/>
+        <param argument="--max_cluster_length" type="integer" value="infinity" label="Maximum Stack and StackCluster length" help="Can be used to remove Stacks and StackClusters that are either too long compared to the original read length. For separately mapped reads, the maximum mapped length may be about 1.5 times the original read length (trimmed, before mapping). For merged reads, the maximum mapped length may be about 2.2 times the original read length (trimmed, before merging and mapping)"/>.
+        <param argument="--max_stack_number" type="integer" value="infinity" label="Maximum number of Stacks per StackCluster" help="Recommended value is 2 for diploid individuals, 4 for tetraploid individuals, 20 for Pool-Seq"/>.
+        <param argument="--min_stack_depth_fraction" type="float" value="0.0" label="Threshold (%) for minimum relative Stack depth per StackCluster" help="Removes spuriously mapped reads from StackClusters, and controls for noise in the number of SMAPs per locus. The StackCluster total read depth and number of SMAPs is recalculated based on the retained Stacks per StackCluster per sample. Recommended values are 10.0 for individuals and 5.0 for Pool-Seq"/>
+        <param argument="--min_cluster_depth" value="0" type="integer" label="Minimum total number of reads per StackCluster per sample." help="Sum of all Stacks per StackCluster calculated after filtering out the Stacks with Stack Depth Fraction < -b. A good reference value is 10 for individual diploid samples, 20 for tetraploids, and 30 for Pool-Seq"/>.
+        <param argument="--max_cluster_depth" type="integer" value="infinity" label="Maximum total number of reads per StackCluster per sample." help="Sum of all Stacks per StackCluster calculated after filtering out the Stacks with Stack Depth Fraction < -b. Used to filter out loci with excessively high read depth"/>
+
+
+
+        ## haplotype sites
+        <param argument="--mapping_orientation" type="select" label="Should strandedness of read mapping be considered for haplotyping?">
+            <option value="ignore" selected="True">Ignore strandedness</option>
+            <option value="stranded">Consider strandedness</option>
+        </param>
+        <param name="bed_sites_file" type="data" optional="false" label="BED File" help="BED file" format="bed" multiple="false"/>
+        <param name="vcf_file" type="data" optional="false" label="Variants positions File" help="VCF file" format="vcf" multiple="false" help"Should be in VCFv4.2 format, containing variant positions. It should contain at least the first 9 columns listing the SNP positions, sample-specific genotype calls across the sampleset are not required. Positional mandatory argument, should be the third argument after smap haplotype-sites."/>
+        <param argument="--plot" type="select" label="Select which plots are to be generated.">
+            <option value="summary" selected="True">Summary (plots with information for all samples)</option>
+            <option value="all">All (per sample plots)</option>
+            <option value="nothing">Nothing</option>
+        </param>
+        <param argument="--undefined_representation" label="Value to use for non-existing or masked data" default="NaN"/>
+        <param argument="--min_mapping_quality" type="integer" value="30" label="Minimum .bam mapping quality to retain reads for analysis"./>
+        <param argument="--no_indels" type="boolean" truevalue="--no_indels" falsevalue="" checked="false" label="Select true in this option if you want to exclude haplotypes that contain an InDel at the given SNP/SMAP positions." help="These reads are also ignored to evaluate the minimal read count"/>
+        <param argument="--min_distinct_haplotypes" type="integer" value="0" label="Minimal number of distinct haplotypes per locus across all samples" help="Loci that do not fit this criterium are removed from the final output"/>
+        <param argument="--max_distinct_haplotypes" type="integer" value="infinity"  label="Maximal number of distinct haplotypes per locus across all samples. Loci that do not fit this criterium are removed from the final output"/>
+        <param argument="--min_read_count" type="integer" value="0" label="Minimal total number of reads per locus per sample"/>
+        <param argument="--max_read_count" type="integer" value="infinity" label="Maximal number of reads per locus per sample, read count is calculated after filtering out the low frequency haplotypes"/>
+        <param argument="--min_haplotype_frequency" type="float" default="0" label="Set minimal HF (in %) to retain the haplotype in the genotyping matrix" help="Haplotypes above this threshold in at least one of the samples are retained. Haplotypes that never reach this threshold in any of the samples are removed"/>
+
+        <param argument="--mask_frequency" type="float" label="Mask haplotype frequency values below this threshold for individual samples to remove noise from the final output" help="Haplotype frequency values below this threshold are set to -u. Haplotypes are not removed based on this value, use --min_haplotype_frequency for this purpose instead."/>
+        <param argument="–-discrete_calls" type="select" label="Discrete calls" help="Select “dominant” to transform haplotype frequency values into presence(1)/absence(0) calls per allele, or dosage to indicate the allele copy number">
+            <option value="dominant">Dominant</option>
+            <option value="dosage">Dosage</option>
+        </param>
+        <param argument="--frequency_interval_bounds" type="string" optional="True" label="Frequency interval bounds for classifying the read frequencies into discrete calls" help="Custom thresholds can be defined by passing one or more space-separated integers or floats which represent relative frequencies in percentage. For dominant calling, one value should be specified. For dosage calling, an even total number of four or more thresholds should be specified"/>
+        <param argument="--dosage_filter" type="integer" optional="True" label="Mask dosage calls in the loci for which the total allele count for a given locus at a given sample differs from the defined value" help="For example, in diploid organisms the total allele copy number must be 2, and in tetraploids the total allele copy number must be 4. (default no filtering)."/>
+        <param argument="--locus_correctness" type="integer" optional="True" label="Threshold value: % of samples with locus correctness." help="Create a new .bed file defining only the loci that were correctly dosage called in at least the defined percentage of samples (default no filtering)"/>
+</inputs>
+    <outputs>
+        /// compare
+        <data format="pdf" name="out_pdf" label="Compare output" />
+
+        /// haplotype sites
+        <data format="tsv" name="haplotype_frequencies" label="Haplotype frequencies" />
+        <data format="tsv" name="coordinates" label="Coordinates" />
+        <data format="tsv" name="read_counts" label="Read counts" />
+        <data format="png" name="frequencies_barplot" label="Frequencies barplot" >
+            <filter>options['plot'] == 'all' or options['plot'] == 'summary'</filter>
+        </data>
+        <collection name="frequencies_histograms" type="list" label="${tool.name} on ${on_string}: Frequencies histograms">
+            <filter>options['plot'] == 'all'</filter>
+            <discover_datasets pattern="(?P&lt;designation&gt;.+)\.png" directory="frequency_plots/"/>
+        </collection>
+    </outputs>
+    <help><![CDATA[
+        TODO: Fill in help.
+    ]]></help>
+</tool>
