@@ -47,7 +47,7 @@
         mv *.tsv tsv_files_out/;
     ]]></command>
 <inputs>
-        <param name="input_bams" type="data" optional="false" label="GFF3 File" help="GFF3 file" format="bam" multiple="true"/>
+        <param name="input_bams" type="data" optional="false" label="Alignment files" help="Alignment files in BAM format" format="bam" multiple="true"/>
         <param argument="--mapping_orientation" type="select" label="Should strandedness of read mapping be considered for haplotyping?">
             <option value="ignore" selected="True">Ignore strandedness</option>
             <option value="stranded">Consider strandedness</option>
