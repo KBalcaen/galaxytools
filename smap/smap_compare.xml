@@ -1,4 +1,4 @@
-<tool id="smap" name="SMAP-compare" version="4.5.0">
+<tool id="smap_compare" name="SMAP compare (BETA)" version="4.5.0">
     <requirements>
         <requirement type="package">ngs-smap</requirement>
     </requirements>
