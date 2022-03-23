@@ -1,0 +1,8 @@
+mean: 76.1974
+median: 49.5888
+25th percentile: 40.5054
+75th percentile: 108.1385
+minimum: 24.0
+maximum: 152.8813
+standard deviation: 45.4698
+variance: 2067.502

@@ -1,42 +1,29 @@
-<tool id="phykit_concat" name="PhyKit function to create a concatenated alignment file. This function is used to help in the construction of multi-locus data matrices." version="0.1.0" python_template_version="3.5">
+<tool id="phykit_pairwise_id" name="PhyKit function to calculate the average pairwise identity among sequences." version="0.1.0" python_template_version="3.5">
     <requirements>
         <requirement type="package" version="1.11.5">phykit</requirement>
     </requirements>
     <command detect_errors="exit_code"><![CDATA[    
-        #import re
-        touch 'aln_list.txt';
-        #for $input in $input1
-            #set $safename = re.sub('[^\w\-_\.]', '_', $input.element_identifier)
-            ln -s '$input' $safename && 
-            echo '$safename' >> 'aln_list.txt';
-        #end for
-        phykit create_concat -a 'aln_list.txt' -p 'out';
-        cp out.fa ${fasta} ;
-        cp out.partition ${partition} ;
-        cp out.occupancy ${occupancy} ;
+        phykit pairwise_identity $input1 ${verbose} > $pairwise_id;
 
     ]]></command>
     <inputs>
-        <param name="input1" type="data" format="fasta" multiple="true" label="alignment list file. File should contain a single column list of alignment sequence files to concatenate into a single matrix." optional="false" />
+        <param name="input1" type="data" format="fasta" multiple="false" label="Alignment file" optional="false" />
+        <param name="verbose" type="boolean" truevalue="--verbose" falsevalue="" checked="False" label="optional argument to print all pairwise identities" />
 
     </inputs>
     <outputs>
-        <data name="fasta" type="fasta" label="Concatenated fasta alignment file"/>
-        <data name="partition" type="text" label="A partition file ready for input into RAxML or IQ-tree"/>
-        <data name="occupancy" type="text" label="An occupancy file that summarizes the taxon occupancy per sequence"/>
+        <data name="pairwise_id" type="text" label="Summary statistics unless used with the verbose option in which all pairwise identities will be reported."/>
     </outputs>
     <tests>
         <test>
-            <param name="input1" value="12_YPR191W_Anc_7.548_codon_aln.fasta.clipkit,12_YPR190C_Anc_7.547_codon_aln.fasta.clipkit,12_YPR189W_Anc_7.546_codon_aln.fasta.clipkit"/>
-            <output name="fasta" file="out.fa"/>
-            <output name="partition" file="out.partition"/>
-            <output name="occupancy" file="out.occupancy"/>
+            <param name="input1" value="test_alignment_0.fa"/>
+            <param name="verbose" value="false" />
+            <output name="pairwise_id" file="test_aln_pk_pi.txt"/>
         </test>
         <test>
-            <param name="input1" value="12_YPR191W_Anc_7.548_codon_aln.fasta.clipkit,12_YPR190C_Anc_7.547_codon_aln.fasta.clipkit,12_YPR189W_Anc_7.546_codon_aln.fasta.clipkit"/>
-            <output name="fasta" file="out.fa"/>
-            <output name="partition" file="out.partition"/>
-            <output name="occupancy" file="out.occupancy"/>
+            <param name="input1" value="test_alignment_0.fa"/>
+            <param name="verbose" value="true" />
+            <output name="pairwise_id" file="test_aln_pk_pi_verbose.txt"/>
         </test>
     </tests>
     <help><![CDATA[
