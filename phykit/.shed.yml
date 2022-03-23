@@ -1,0 +1,9 @@
+categories:
+- Phylogenetics
+description: Toolkit for processing and analyzing phylogenomic data
+homepage_url: https://jlsteenwyk.com/PhyKIT/index.html
+long_description: PhyKIT, a toolkit for the UNIX shell environment with numerous functions
+  that process multiple sequence alignments and phylogenies for broad applications
+name: phykit
+owner: padge
+remote_repository_url: https://github.com/JLSteenwyk/PhyKIT
