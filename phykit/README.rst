@@ -1,4 +1,4 @@
-bwakit
+PhyKIT
 =======
 PhyKIT is a UNIX shell toolkit for processing and analyzing phylogenomic data.
 PhyKIT helps process and analyze multiple sequence alignments and phylogenies.
