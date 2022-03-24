@@ -1,6 +1,6 @@
-<tool id="phykit_prune_tree" name="PhyKit function to calculate summary statistics among patristic distances in a phylogeny" version="0.1.0" python_template_version="3.5">
+<tool id="phykit_prune_tree" name="PhyKit function to prune tips from a phylogeny." version="0.1.0" python_template_version="3.5">
     <requirements>
-        <requirement type="package" version="1.11.5">phykit</requirement>
+        <requirement type="package" version="1.11.7">phykit</requirement>
     </requirements>
      <command detect_errors="exit_code"><![CDATA[    
         phykit prune_tree $input1 $input2
@@ -15,7 +15,7 @@
         <param name="keep" type="boolean" truevalue="--keep" falsevalue="" checked="False" label="Instead of pruning tips in list of taxa, keep them" />
     </inputs>
     <outputs>
-        <data name="prune_tree" type="newick" label="Pruned phylogeny"/>
+        <data name="prune_tree" format="newick" label="Pruned phylogeny"/>
     </outputs>
     <tests>
         <test>
@@ -32,14 +32,6 @@
         </test>
     </tests>
     <help><![CDATA[
-         _____  _           _  _______ _______ 
-|  __ \| |         | |/ /_   _|__   __|
-| |__) | |__  _   _| ' /  | |    | |   
-|  ___/| '_ \| | | |  <   | |    | |   
-| |    | | | | |_| | . \ _| |_   | |   
-|_|    |_| |_|\__, |_|\_\_____|  |_|   
-               __/ |                   
-              |___/   
 
 Version: 1.11.3
 Citation: Steenwyk et al. 2021, Bioinformatics. doi: 10.1093/bioinformatics/btab096

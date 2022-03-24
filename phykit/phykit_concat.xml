@@ -1,6 +1,6 @@
 <tool id="phykit_concat" name="PhyKit function to create a concatenated alignment file. This function is used to help in the construction of multi-locus data matrices." version="0.1.0" python_template_version="3.5">
     <requirements>
-        <requirement type="package" version="1.11.5">phykit</requirement>
+        <requirement type="package" version="1.11.7">phykit</requirement>
     </requirements>
     <command detect_errors="exit_code"><![CDATA[    
         #import re
@@ -21,9 +21,9 @@
 
     </inputs>
     <outputs>
-        <data name="fasta" type="fasta" label="Concatenated fasta alignment file"/>
-        <data name="partition" type="text" label="A partition file ready for input into RAxML or IQ-tree"/>
-        <data name="occupancy" type="text" label="An occupancy file that summarizes the taxon occupancy per sequence"/>
+        <data name="fasta" format="fasta" label="Concatenated fasta alignment file"/>
+        <data name="partition" format="text" label="A partition file ready for input into RAxML or IQ-tree"/>
+        <data name="occupancy" format="text" label="An occupancy file that summarizes the taxon occupancy per sequence"/>
     </outputs>
     <tests>
         <test>
@@ -40,14 +40,6 @@
         </test>
     </tests>
     <help><![CDATA[
-         _____  _           _  _______ _______ 
-|  __ \| |         | |/ /_   _|__   __|
-| |__) | |__  _   _| ' /  | |    | |   
-|  ___/| '_ \| | | |  <   | |    | |   
-| |    | | | | |_| | . \ _| |_   | |   
-|_|    |_| |_|\__, |_|\_\_____|  |_|   
-               __/ |                   
-              |___/   
 
 Version: 1.11.3
 Citation: Steenwyk et al. 2021, Bioinformatics. doi: 10.1093/bioinformatics/btab096
