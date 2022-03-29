@@ -1,0 +1,10 @@
+categories:
+- Phylogenetics
+description: Alignment trimming software for phylogenetics
+homepage_url: https://jlsteenwyk.com/ClipKIT/index.html
+long_description: ClipKIT is a fast and flexible alignment trimming tool that keeps
+  phylogenetically informative sites and removes those that display characteristics
+  poor phylogenetic signal.
+name: clipkit
+owner: padge
+remote_repository_url: https://github.com/jlsteenwyk/clipkit

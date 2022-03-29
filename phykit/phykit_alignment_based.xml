@@ -1,0 +1,126 @@
+<tool id="phykit_alignment_based" name="PhyKit - Alignment-based functions" version="0.1.0" python_template_version="3.5">
+    <requirements>
+        <requirement type="package" version="1.11.7">phykit</requirement>
+    </requirements>
+    <command detect_errors="exit_code"><![CDATA[
+
+        #if $tools.tool_selector == "create_concat"    
+            #import re
+            touch 'aln_list.txt';
+            #for $input in $tools.input1
+                #set $safename = re.sub('[^\w\-_\.]', '_', $input.element_identifier)
+                ln -s '$input' $safename && 
+                echo '$safename' >> 'aln_list.txt';
+            #end for
+            phykit create_concat -a 'aln_list.txt' -p 'out';
+            cp out.fa ${fasta} ;
+            cp out.partition ${partition} ;
+            cp out.occupancy ${occupancy} ;
+        #elif $tools.tool_selector == "pairwise_identity"
+            phykit pairwise_identity $tools.input1 $tools.verbose > $pairwise_id;
+        #elif $tools.tool_selector == "parsimony_informative_sites"
+            phykit parsimony_informative_sites $tools.input1 > $parsimony_informative_sites;
+        #end if
+
+    ]]></command>
+    <inputs>
+        <conditional name="tools">
+            <param name="tool_selector" type="select" label="Select tool for processing the alignment(s)">
+                <option value="create_concat">Concatenate alignments.</option>
+                <option value="pairwise_identity">Calculate the average pairwise identity among sequences</option>
+                <option value="parsimony_informative_sites">Calculate the number and percentage of parismony informative sites</option>
+            </param>
+            <when value="create_concat">
+                <param name="input1" type="data" format="fasta" multiple="true" label="alignment list file. File should contain a single column list of alignment sequence files to concatenate into a single matrix." optional="false" />
+            </when>
+            <when value="pairwise_identity">
+                <param name="input1" type="data" format="fasta" multiple="false" label="Alignment file" optional="false" />
+                <param name="verbose" type="boolean" truevalue="--verbose" falsevalue="" checked="False" label="optional argument to print all pairwise identities" />
+            </when>
+            <when value="parsimony_informative_sites">
+                <param name="input1" type="data" format="fasta" multiple="false" label="Alignment file" optional="false" />
+            </when>
+        </conditional>
+    </inputs>
+    <outputs>
+        <data name="fasta" format="fasta" label="Concatenated fasta alignment file">
+            <filter>tools['tool_selector']=='create_concat'</filter>
+        </data>
+        <data name="partition" format="iqtree" label="A partition file ready for input into RAxML or IQ-tree">
+            <filter>tools['tool_selector']=='create_concat'</filter>
+        </data>
+        <data name="occupancy" format="tabular" label="An occupancy file that summarizes the taxon occupancy per sequence">
+            <filter>tools['tool_selector']=='create_concat'</filter>
+        </data>
+        <data name="pairwise_id" format="txt" label="Summary statistics unless used with the verbose option in which all pairwise identities will be reported.">
+            <filter>tools['tool_selector']=='pairwise_identity'</filter>
+        </data>
+        <data name="parsimony_informative_sites" format="tabular" label="three tab delimited values: col1: number of parsimony informative sites col2: total number of sites col3: percentage of parsimony informative sites">
+            <filter>tools['tool_selector']=='parsimony_informative_sites'</filter>
+        </data>
+    </outputs>
+    <tests>
+        <test>
+            <param name="tool_selector" value="create_concat" />
+            <param name="input1" value="12_YPR191W_Anc_7.548_codon_aln.fasta.clipkit,12_YPR190C_Anc_7.547_codon_aln.fasta.clipkit,12_YPR189W_Anc_7.546_codon_aln.fasta.clipkit"/>
+            <output name="fasta" file="out.fa"/>
+            <output name="partition" file="out.partition"/>
+            <output name="occupancy" file="out.occupancy"/>
+        </test>
+        <test>
+            <param name="tool_selector" value="pairwise_identity" />
+            <param name="input1" value="test_alignment_0.fa"/>
+            <param name="verbose" value="false" />
+            <output name="pairwise_id" file="test_aln_pk_pi.txt"/>
+        </test>
+        <test>
+            <param name="tool_selector" value="pairwise_identity" />
+            <param name="input1" value="test_alignment_0.fa"/>
+            <param name="verbose" value="true" />
+            <output name="pairwise_id" file="test_aln_pk_pi_verbose.txt"/>
+        </test>
+        <test>
+            <param name="tool_selector" value="parsimony_informative_sites" />
+            <param name="input1" value="test_alignment_0.fa"/>
+            <output name="parsimony_informative_sites" file="test_aln_pk_pis.txt"/>
+        </test>
+    </tests>
+    <help><![CDATA[
+
+Version: 1.11.3
+Citation: Steenwyk et al. 2021, Bioinformatics. doi: 10.1093/bioinformatics/btab096
+Documentation link: https://jlsteenwyk.com/PhyKIT/usage/index.html#alignment-based-functions
+Publication link: https://academic.oup.com/bioinformatics/article-abstract/37/16/2325/6131675
+
+PhyKIT helps process and analyze multiple sequence alignments and phylogenies.
+
+Generally, all functions are designed to help understand the contents of alignments
+(e.g., gc content or the number of parsimony informative sites) and the shape
+of trees (e.g., treeness, degree of violation of a molecular clock).
+
+
+Alignment-based commands
+========================
+create_concatenation_matrix (alias: create_concat; cc)
+    - create concatenation matrix from a set of alignments
+pairwise_identity (alias: pairwise_id, pi)
+    - calculates average pairwise identify among sequences in
+      an alignment file. This is a proxy for evolutionary rate
+parsimony_informative_sites (alias: pis)
+    - calculates the number and percentage of parsimony
+      informative sites in an alignment
+
+
+    ]]></help>
+    <citations>
+        <citation type="bibtex">
+@misc{githubPhyKIT,
+  author = {LastTODO, FirstTODO},
+  year = {TODO},
+  title = {PhyKIT},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  url = {https://github.com/JLSteenwyk/PhyKIT},
+}</citation>
+    </citations>
+</tool>
