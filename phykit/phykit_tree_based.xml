@@ -1,0 +1,157 @@
+<tool id="phykit_tree_based" name="PhyKit - Tree-based functions" version="0.1.0" python_template_version="3.5">
+    <requirements>
+        <requirement type="package" version="1.11.7">phykit</requirement>
+    </requirements>
+    <command detect_errors="exit_code"><![CDATA[
+
+        #if $tools.tool_selector == "evolutionary_rate"    
+            phykit evolutionary_rate $tools.input1 > $evo_rate;
+        #elif $tools.tool_selector == "patristic_distances"
+            phykit patristic_distances $tools.verbose $tools.input1 > $patristic_distances;
+        #elif $tools.tool_selector == "prune_tree"
+            phykit prune_tree $tools.input1 $tools.input2
+            -o 'out.pruned'
+            $tools.keep;
+            cp out.pruned ${pruned_tree_out};
+        #elif $tools.tool_selector == "robinson_foulds_distance"
+            phykit robinson_foulds_distance $tools.input1 $tools.input2 > $rf_distance;
+        #elif $tools.tool_selector == "root_tree"
+            phykit root_tree $tools.input1 
+            -r $tools.input2
+            -o 'out.rooted';
+            cp out.rooted ${rooted_tree};
+        #end if
+
+    ]]></command>
+    <inputs>
+        <conditional name="tools">
+            <param name="tool_selector" type="select" label="Select tool for processing the alignment(s)">
+                <option value="evolutionary_rate">Calculate a tree-based estimation of the evolutionary rate of a gene.</option>
+                <option value="patristic_distances">Calculate summary statistics among patristic distances in a phylogeny</option>
+                <option value="prune_tree">Prune tips from a phylogeny</option>
+                <option value="robinson_foulds_distance">Calculate Robinson-Foulds (RF) distance between two trees</option>
+                <option value="root_tree">Root phylogeny using user-specified taxa</option>
+            </param>
+            <when value="evolutionary_rate">
+                <param name="input1" type="data" format="newick" multiple="false" label="Tree file" optional="false" />
+            </when>
+            <when value="patristic_distances">
+                <param name="input1" type="data" format="newick" multiple="false" label="Tree file" optional="false" />
+                <param name="verbose" type="boolean" truevalue="--verbose" falsevalue="" checked="False" label="optional argument to get all distances" />
+            </when>
+            <when value="prune_tree">
+                <param name="input1" type="data" format="newick" multiple="false" label="Tree file" optional="false" />
+                <param name="input2" type="data" format="text" multiple="false" label="Single column file with the names of the tips to remove from the phylogeny" optional="false" />
+                <param name="keep" type="boolean" truevalue="--keep" falsevalue="" checked="False" label="Instead of pruning tips in list of taxa, keep them" />
+            </when>
+            <when value="robinson_foulds_distance">
+                <param name="input1" type="data" format="newick" multiple="false" label="Tree 1" optional="false" />
+                <param name="input2" type="data" format="newick" multiple="false" label="Tree 2" optional="false" />
+            </when>
+            <when value="root_tree">
+                <param name="input1" type="data" format="newick" multiple="false" label="Tree file" optional="false" />
+                <param name="input2" type="data" format="text" multiple="false" label="Single column file with taxa names to root the phylogeny on" optional="false" />
+            </when>
+        </conditional>
+    </inputs>
+    <outputs>
+        <data name="evo_rate" format="txt" label="total tree length divided by the number of terminals.">
+            <filter>tools['tool_selector']=='evolutionary_rate'</filter>
+        </data>
+        <data name="patristic_distances" format="txt" label="summary statistics of all tip-to-tip distances in a phylogeny. With the -v option, the first column will have two taxon names separated by a ‘-‘ followed by the patristic distance. Features will be tab separated.">
+            <filter>tools['tool_selector']=='patristic_distances'</filter>
+        </data>
+        <data name="pruned_tree_out" format="newick" label="Pruned phylogeny">
+            <filter>tools['tool_selector']=='prune_tree'</filter>
+        </data>
+        <data name="rf_distance" format="tabular" label="col 1; the plain RF distance and col 2: the normalized RF distance" >
+            <filter>tools['tool_selector']=='robinson_foulds_distance'</filter>
+        </data>
+        <data name="rooted_tree" format="newick" label="Rooted tree">
+            <filter>tools['tool_selector']=='root_tree'</filter>
+        </data>
+    </outputs>
+    <tests>
+        <test>
+            <param name="tool_selector" value="evolutionary_rate" />
+            <param name="input1" value="12_YPR191W_Anc_7.548_codon_aln.fasta.clipkit.treefile"/>
+            <output name="evo_rate" file="test_evo_rate.txt"/>
+        </test>
+        <test>
+            <param name="tool_selector" value="patristic_distances" />
+            <param name="input1" value="tree_simple.tre"/>
+            <param name="verbose" value="false" />
+            <output name="patristic_distances" file="test_tree_simple_pd.txt"/>
+        </test>
+        <test>
+            <param name="tool_selector" value="patristic_distances" />
+            <param name="input1" value="tree_simple.tre"/>
+            <param name="verbose" value="true" />
+            <output name="patristic_distances" file="test_tree_simple_pd_verbose.txt"/>
+        </test>
+        <test>
+            <param name="tool_selector" value="prune_tree" />
+            <param name="input1" value="tree_simple.tre"/>
+            <param name="input2" value="tree_simple_prune.txt"/>
+            <param name="keep" value="false" />
+            <output name="pruned_tree_out" file="tree_simple.pruned"/>
+        </test>
+        <test>
+            <param name="tool_selector" value="prune_tree" />
+            <param name="input1" value="tree_simple.tre"/>
+            <param name="input2" value="tree_simple_prune.txt"/>
+            <param name="keep" value="true" />
+            <output name="pruned_tree_out" file="tree_simple_keep.pruned"/>
+        </test>
+        <test>
+            <param name="tool_selector" value="robinson_foulds_distance" />
+            <param name="input1" value="tree_simple.tre"/>
+            <param name="input2" value="tree_simple_other_topology.tre"/>
+            <output name="rf_distance" file="test_tree_simple_rfd.txt"/>
+        </test>
+        <test>
+            <param name="tool_selector" value="root_tree" />
+            <param name="input1" value="tree_simple.tre"/>
+            <param name="input2" value="tree_simple.outgroup.txt"/>
+            <output name="rooted_tree" file="tree_simple.tre.rooted"/>
+        </test>
+    </tests>
+    <help><![CDATA[
+
+Version: 1.11.3
+Citation: Steenwyk et al. 2021, Bioinformatics. doi: 10.1093/bioinformatics/btab096
+Documentation link: https://jlsteenwyk.com/PhyKIT/usage/index.html#tree-based-functions
+Publication link: https://academic.oup.com/bioinformatics/article-abstract/37/16/2325/6131675
+
+PhyKIT helps process and analyze multiple sequence alignments and phylogenies.
+
+Generally, all functions are designed to help understand the contents of alignments
+(e.g., gc content or the number of parsimony informative sites) and the shape
+of trees (e.g., treeness, degree of violation of a molecular clock).
+
+Tree-based commands
+===================
+evolutionary_rate (alias: evo_rate)
+    - reports a tree-based estimation of evolutionary rate for a gene
+patristic_distances (alias: pd)
+    - calculate all pairwise distances between tips in a tree
+prune_tree (alias: prune)
+    - prune taxa from a phylogeny
+robinson_foulds_distance (alias: rf_distance; rf_dist; rf)
+    - calculates Robinson-Foulds distance between two trees
+root_tree (alias: root; rt)
+    - roots tree on user-specified taxa or taxon
+
+    ]]></help>
+    <citations>
+        <citation type="bibtex">
+@misc{githubPhyKIT,
+  author = {LastTODO, FirstTODO},
+  year = {TODO},
+  title = {PhyKIT},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  url = {https://github.com/JLSteenwyk/PhyKIT},
+}</citation>
+    </citations>
+</tool>

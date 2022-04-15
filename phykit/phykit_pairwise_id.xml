@@ -1,6 +1,6 @@
 <tool id="phykit_pairwise_id" name="PhyKit function to calculate the average pairwise identity among sequences." version="0.1.0" python_template_version="3.5">
     <requirements>
-        <requirement type="package" version="1.11.5">phykit</requirement>
+        <requirement type="package" version="1.11.7">phykit</requirement>
     </requirements>
     <command detect_errors="exit_code"><![CDATA[    
         phykit pairwise_identity $input1 ${verbose} > $pairwise_id;
@@ -12,7 +12,7 @@
 
     </inputs>
     <outputs>
-        <data name="pairwise_id" type="text" label="Summary statistics unless used with the verbose option in which all pairwise identities will be reported."/>
+        <data name="pairwise_id" format="text" label="Summary statistics unless used with the verbose option in which all pairwise identities will be reported."/>
     </outputs>
     <tests>
         <test>
@@ -27,14 +27,6 @@
         </test>
     </tests>
     <help><![CDATA[
-         _____  _           _  _______ _______ 
-|  __ \| |         | |/ /_   _|__   __|
-| |__) | |__  _   _| ' /  | |    | |   
-|  ___/| '_ \| | | |  <   | |    | |   
-| |    | | | | |_| | . \ _| |_   | |   
-|_|    |_| |_|\__, |_|\_\_____|  |_|   
-               __/ |                   
-              |___/   
 
 Version: 1.11.3
 Citation: Steenwyk et al. 2021, Bioinformatics. doi: 10.1093/bioinformatics/btab096

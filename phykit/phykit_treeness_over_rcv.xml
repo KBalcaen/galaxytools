@@ -1,6 +1,6 @@
-<tool id="phykit_treeness_rcv" name="PhyKit function to root phylogeny using user-specified taxa." version="0.1.0" python_template_version="3.5">
+<tool id="phykit_treeness_rcv" name="PhyKit function to calculate treeness/RCV for a given alignment and tree." version="0.1.0" python_template_version="3.5">
     <requirements>
-        <requirement type="package" version="1.11.5">phykit</requirement>
+        <requirement type="package" version="1.11.7">phykit</requirement>
     </requirements>
      <command detect_errors="exit_code"><![CDATA[    
         phykit treeness_over_rcv -a $input1 -t $input2 > $treeness_rcv;
@@ -11,7 +11,7 @@
         <param name="input2" type="data" format="newick" multiple="false" label="Tree file" optional="false" />
     </inputs>
     <outputs>
-        <data name="treeness_rcv" type="txt" label="Three tab delimited values: col1: treeness/RCV col2: treeness col3: RCV" />
+        <data name="treeness_rcv" format="tabular" label="Three tab delimited values: col1: treeness/RCV col2: treeness col3: RCV" />
     </outputs>
     <tests>
         <test>
@@ -21,14 +21,6 @@
         </test>
     </tests>
     <help><![CDATA[
-         _____  _           _  _______ _______ 
-|  __ \| |         | |/ /_   _|__   __|
-| |__) | |__  _   _| ' /  | |    | |   
-|  ___/| '_ \| | | |  <   | |    | |   
-| |    | | | | |_| | . \ _| |_   | |   
-|_|    |_| |_|\__, |_|\_\_____|  |_|   
-               __/ |                   
-              |___/   
 
 Version: 1.11.3
 Citation: Steenwyk et al. 2021, Bioinformatics. doi: 10.1093/bioinformatics/btab096

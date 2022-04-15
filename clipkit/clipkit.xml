@@ -1,0 +1,133 @@
+<tool id="clipkit" name="ClipKIT. Alignment trimming software for phylogenetics." version="0.1.0" python_template_version="3.5">
+    <requirements>
+        <requirement type="package" version="1.3">clipkit</requirement>
+    </requirements>
+    <command detect_errors="exit_code"><![CDATA[    
+        clipkit $input1 -m ${mode_selector} -o $trimmed_output -of $out_format_selector --log ${complement} 
+        #if $gaps
+            --gaps ${gaps}
+        #end if;
+        &&
+        mv ${trimmed_output}.log ${log_output}
+        #if $complement
+            &&
+            mv ${trimmed_output}.complement ${complement_output}
+        #end if;
+
+    ]]></command>
+    <inputs>
+        <param name="input1" type="data" format="fasta,clustal,maf,xmfa,phylip,stockholm" multiple="false" label="Alignment file" optional="false" />
+        <param name="mode_selector" type="select" label="Select trimming mode from the list">
+            <option value="smart-gap">smart-gap</option>
+            <option value="gappy">gappy</option>
+            <option value="kpic">kpic</option>
+            <option value="kpic-smart-gap">kpic-smart-gap</option>
+            <option value="kpic-gappy">kpic-gappy</option>
+            <option value="kpi">kpi</option>
+            <option value="kpi-smart-gap">kpi-smart-gap</option>
+            <option value="kpi-gappy">kpi-gappy</option>
+        </param>
+        <param name="out_format_selector" type="select" label="Select trimmed alignment output format from the list">
+            <option value="fasta">FASTA format</option>
+            <option value="clustal">CLUSTAL format</option>
+            <option value="maf">MAF format</option>
+            <option value="mauve">MAUVE format</option>
+            <option value="stockholm">STOCKHOLM format</option>
+            <option value="phylip">PHYLIP/PHYLIP4 format</option>
+            <option value="phylip_sequential">PHYLIP/PHYLIP4 sequential format</option>
+            <option value="phylip_relaxed">PHYLIP/PHYLIP4 relaxed format</option>
+        </param>
+        <param name="gaps" type="float" optional="true" value="0.9" min="0.0" max="1.0" label="gappyness" help="Specify gappyness threshold (between 0 and 1). Default: 0.9" multiple="false"/>
+        <param name="complement" type="boolean" truevalue="--complement" falsevalue="" checked="False" label="create complement of the trimmed alignment" />
+    </inputs>
+    <outputs>
+        <data name="trimmed_output" format="fasta" label="Trimmed alignment."/>
+        <data name="log_output" format="txt" label="Clipkit log."/>
+        <data name="complement_output" format="fasta" label="Clipkit complement.">
+            <filter>complement</filter>
+        </data>
+    </outputs>
+    <tests>
+        <test>
+            <param name="input1" value="simple.fa"/>
+            <param name="mode_selector" value="smart-gap" />
+            <param name="gaps" value="0.9" />
+            <output name="trimmed_output" file="simple.fa.clipkit"/>
+            <output name="log_output" file="simple.fa.clipkit.log"/>
+        </test>
+        <test>
+            <param name="input1" value="simple.fa"/>
+            <param name="mode_selector" value="gappy" />
+            <param name="gaps" value="0.2" />
+            <output name="trimmed_output" file="gappy.simple.fa.clipkit"/>
+        </test>
+        <test>
+            <param name="input1" value="simple.fa"/>
+            <param name="mode_selector" value="gappy" />
+            <param name="gaps" value="0.2" />
+            <output name="trimmed_output" file="gappy.simple.fa.clipkit"/>
+            <output name="log_output" file="gappy.simple.fa.clipkit.log"/>
+        </test>
+        <test>
+            <param name="input1" value="simple.fa"/>
+            <param name="mode_selector" value="kpi" />
+            <param name="complement" value="true" />
+            <param name="gaps" value="0.9" />
+            <output name="trimmed_output" file="kpi.simple.fa.clipkit"/>
+            <output name="complement_output" file="kpi.simple.fa.clipkit.complement"/>
+        </test>
+        <test>
+            <param name="input1" value="simple.fa"/>
+            <param name="mode_selector" value="kpi-gappy" />
+            <param name="out_format_selector" value="phylip_relaxed" />
+            <param name="gaps" value="0.7" />
+            <output name="trimmed_output" file="of.gaps.simple.phylip_relaxed"/>
+            <output name="log_output" file="of.gaps.simple.phylip_relaxed.log"/>
+        </test>
+    </tests>
+    <help><![CDATA[         
+Modes
+    smart-gap: dynamic determination of gaps threshold
+    gappy: trim sites that are greater than the gaps threshold
+    kpic: keeps parismony informative and constant sites
+    kpic-smart-gap: a combination of kpic- and smart-gap-based trimming
+    kpic-gappy: a combination of kpic- and gappy-based trimming
+    kpi: keep only parsimony informative sites
+    kpi-smart-gap: a combination of kpi- and smart-gap-based trimming
+    kpi-gappy: a combination of kpi- and gappy-based trimming
+
+Gaps
+    Positions with gappyness greater than threshold will be trimmed. 
+    Must be between 0 and 1. (Default: 0.9). This argument is ignored
+    when using the kpi and kpic mdoes of trimming as well as an 
+    iteration of trimming that uses smart-gap.
+
+Input and output file formats
+    Supported input and output files include:
+    fasta, clustal, maf, mauve, phylip, phylip-sequential, 
+    phylip-relaxed, and stockholm
+
+Log
+    Creates a log file that summarizes the characteristics of each position.
+    The log file has four columns.
+    - Column 1 is the position in the alignment (starting at 1), 
+    - Column 2 reports if the site was trimmed or kept (trim and keep, respectively),
+    - Column 3 reports if the site is a parsimony informative site or not (PI and nPI, respectively), or
+    a constant site or not (Const, nConst), or neither (nConst, nPI)
+    - Column 4 reports the gappyness of the the position (number of gaps / entries in alignment)
+
+Complementary
+    Creates an alignment file of only the trimmed sequences.
+    ]]></help>
+    <citations>
+        <citation type="bibtex">
+@misc{githubClipKIT,
+  author = {LastTODO, FirstTODO},
+  year = {TODO},
+  title = {ClipKIT},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  url = {https://github.com/jlsteenwyk/clipkit},
+}</citation>
+    </citations>
+</tool>

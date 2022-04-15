@@ -1,6 +1,6 @@
 <tool id="phykit_root_tree" name="PhyKit function to root phylogeny using user-specified taxa." version="0.1.0" python_template_version="3.5">
     <requirements>
-        <requirement type="package" version="1.11.5">phykit</requirement>
+        <requirement type="package" version="1.11.7">phykit</requirement>
     </requirements>
      <command detect_errors="exit_code"><![CDATA[    
         phykit root_tree $input1 
@@ -14,7 +14,7 @@
         <param name="input2" type="data" format="text" multiple="false" label="Single column file with taxa names to root the phylogeny on" optional="false" />
     </inputs>
     <outputs>
-        <data name="rooted_tree" type="newick" label="Rooted tree"/>
+        <data name="rooted_tree" format="newick" label="Rooted tree"/>
     </outputs>
     <tests>
         <test>
@@ -24,14 +24,6 @@
         </test>
     </tests>
     <help><![CDATA[
-         _____  _           _  _______ _______ 
-|  __ \| |         | |/ /_   _|__   __|
-| |__) | |__  _   _| ' /  | |    | |   
-|  ___/| '_ \| | | |  <   | |    | |   
-| |    | | | | |_| | . \ _| |_   | |   
-|_|    |_| |_|\__, |_|\_\_____|  |_|   
-               __/ |                   
-              |___/   
 
 Version: 1.11.3
 Citation: Steenwyk et al. 2021, Bioinformatics. doi: 10.1093/bioinformatics/btab096
