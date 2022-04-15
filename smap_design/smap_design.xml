@@ -1,14 +1,33 @@
 <tool id="smap_design" name="SMAP-design" version="0.1.0" python_template_version="3.5">
     <requirements>
-        <requirement type="package">smap-design</requirement>
+        <!--<requirement type="package">smap-design</requirement>-->
         <requirement type="package">primer3-py</requirement>
         <requirement type="package">pandas</requirement>
         <requirement type="package">biopython</requirement>
         <requirement type="package">matplotlib</requirement>
+        <requirement type="package">gffutils</requirement>
     </requirements>
     <command detect_errors="exit_code"><![CDATA[
-        python smap 
-            --output 'SMAPdesign' 
+        #if $input_source_conditional.input_source == "pregenerated_inputs":
+            design_input_fasta=$input_source_conditional.input_fasta;
+            design_input_gff3=$input_source_conditional.input_gff3;
+        #else:
+            ln -s $input_source_conditional.fasta_file species_fasta.fasta;
+            ln -s $input_source_conditional.gff_file species.gff3;
+            ln -s $input_source_conditional.gene_families_file families_file.txt;
+        python3 $__tool_directory__/Get_fasta_and_gff_for_selected_hom_groups_extended_flanking_region.py ./species.gff3 ./species_fasta.fasta ./families_file.txt $input_source_conditional.species --region $input_source_conditional.region
+            #if $input_source_conditional.interest_input_selector.interest_input == "genes":
+                --genes $input_source_conditional.interest_input_selector.genes_file
+            #else
+                --hom_groups $input_source_conditional.interest_input_selector.homology_groups_file
+            #end if
+            &&
+            ######  need to set the design_input_fasta and design_input_gff3 vars
+            design_input_fasta=`ls *_bp.fasta` &&
+            design_input_gff3=`ls *_bp.gff`;
+        #end if
+        python3 $__tool_directory__/smap_design/SMAPdesign.py
+            --output 'OUTPUT' 
             --minimumAmpliconLength $min_amplicon_length 
             --maximumAmpliconLength $max_amplicon_length 
             --numbergRNAs $number_grnas 
@@ -16,106 +35,114 @@
             #if $print_summary:
                 --summary
             #end if
-            #if $verbose:
-                --verbose
+            $bordersOnly
+            --distance $distance
+            $print_summary
+            $allAmplicons
+            --gRNAfile $gRNAfile
+            --gRNAsource $gRNAsource.value
+            #if $selectGenes:
+                --selectGenes $selectGenes
             #end if
-            $input_fasta $input_gff3;
-        mv SMAPdesign.gff3 $gff_output;
-        mv SMAPdesign_primers.tsv $primers_output;
+            --gRNAoverlap $gRNAoverlap
+            --generateAmplicons $generateAmplicons
+            --threshold $threshold
+            --borderLength $borderLength
+            $ampliconLabel
+            --targetRegion5 $targetRegion5
+            --targetRegion3 $targetRegion3
+            #if $targetSpecificRegion:
+                --targetSpecificRegion $targetSpecificRegion
+            #end if
+            $misPrimingAllowed
+            $restrictPrimerDesign 
+            --promoter '$promoter'
+            --scaffold '$scaffold'
+            \$design_input_fasta \$design_input_gff3;
+        mv OUTPUT.gff3 $gff_output;
+        mv OUTPUT_primers.tsv $primers_output;
+        mv OUTPUT_gRNAs.tsv $gRNA_per_gene;
+        #if $print_summary:
+            mv OUTPUT_SMAPdesign_summary.tsv $summary;
+        #end if
+        #if $bordersOnly:
+            mv OUTPUT_SMAPdesign_borders.gff3 $borders_output;
+        #end if
+        ;
     ]]></command>
     <inputs>
-        <param name="input_fasta" type="data" optional="false" label="Reference FASYA file" help="Reference FASTA file" format="fasta" multiple="false"/>
-        <param name="input_gff3" type="data" optional="false" label="GFF3 File" help="GFF3 file" format="gff3" multiple="false"/>
-        <param name="number_amplicons" type="integer" optional="true" default=2 label="The maximum number of non-overlapping amplicons in the output (default = 2)" help="sets the seed for the random number generator"/>
-        <param name="number_grnas" type="integer" optional="true" default=2 label="Maximum number of gRNAs to retain per amplicon (default = 2)" help=""/>
-        <param name="min_amplicon_length" type="integer" optional="true" default=120 label="The minimum length of the amplicons in base pairs (default = 120)" help=""/>
-        <param name="max_amplicon_length" type="integer" optional="true" default=150 label="The maximum length of the amplicons in base pairs (default = 120)" help=""/>
-        <param name="distance" type="integer" optional="true" default=15 label="Minimum number of bases between primer and gRNA (default = 15)" help=""/>
-        <param name="print_summary" type="boolean" help='Write summary file and plot of the output'/>
-    parser.add_argument('-g', '--gRNAfile',
-                        help='CRISPOR, FlashFry or other gRNA design program output file. '
-                             'The CRISPOR and Flashfry file must contain a header and 12 columns. Check the manual for specifics')
+        <conditional name="input_source_conditional">
+        <param name="input_source" type="select">
+            <option value="smap_selector">Generate the target genes using SMAP selector</option>
+            <option value="pregenerated_inputs">Use pregenerated inputs</option>
+        </param>
+        <when value="smap_selector">
+            <param name="species" type="text" label="Species, corresponding with species indicated in the gene family info file"/>
+            <param name="gene_families_file" type="data" format="tsv,tabular" label="gene family information file (tab-delimited) for the (coding) genes, separated per gene family type"/>
+            <param name="fasta_file" type="data" format="fasta" label="FASTA file containing the genomic sequence of the species"/>
+            <param name="gff_file" type="data" format="gff,gff3" label="gff3 file (tab-delimited) of the species containing gene, CDS, and exon features with positions relative to the fasta file"/>
+            <conditional name="interest_input_selector">
+                <param name="interest_input" type="select">
+                    <option value="genes">list with genes of interest</option>
+                    <option value="homology_groups">list with homology groups of interest</option>
+                </param>
+                <when value="genes">
+                    <param name="genes_file" type="data" format="txt" label="Genes file"/>
+                </when>
+                <when value="homology_groups">
+                    <param name="homology_groups_file" type="data" format="txt" label="Homology groups file"/>
+                </when>
+            </conditional>
+            <param argument="--region" type="integer" value="0" label="Region to extend the FASTA sequence of the genes of interest on both sides with the given number of basepairs or with the maximum possible" help="default: 0"/>
 
-    parser.add_argument('-gs', '--gRNAsource',
-                        help='What is the source of the gRNA file? Enter "CRISPOR", "FlashFry" or "other" (default = FlashFry',
-                        default="FlashFry")
+        </when>
+        <when value="pregenerated_inputs">
+            <param name="input_fasta" type="data" optional="false" label="FASTA file containing all genes to screen" format="fasta"/>
+            <param name="input_gff3" type="data" optional="false" label="GFF3 File" help="GFF3 file with at least the CDS feature with positions relative to the FASTA file " format="gff3,gff"/>
+        </when>
+        </conditional>
 
+        <param name="number_amplicons" type="integer" value="2" label="The maximum number of non-overlapping amplicons in the output (default = 2)" help="sets the seed for the random number generator"/>
+        <param name="number_grnas" type="integer" value="2" label="Maximum number of gRNAs to retain per amplicon (default = 2)" help=""/>
+        <param name="min_amplicon_length" type="integer" value="120" label="The minimum length of the amplicons in base pairs (default = 120)" help=""/>
+        <param name="max_amplicon_length" type="integer" value="150" label="The maximum length of the amplicons in base pairs (default = 120)" help=""/>
+        <param name="distance" type="integer" optional="true" value="15" label="Minimum number of bases between primer and gRNA (default = 15)" help=""/>
+        <param name="print_summary" type="boolean" truevalue="--summary" falsevalue="" label="Write summary file and plot of the output"/>
+        <param argument='--allAmplicons' type="boolean" truevalue="--allAmplicons" falsevalue="" label='Return all amplicons with their respective gRNAs per gene (extra file)'/>
+        <param name='bordersOnly' type="boolean" truevalue="-bo" falsevalue="" checked="false" label='Write additional GFF file with only borders (for SMAP)'/>
+        <param argument='--gRNAfile' type="data" format="tsv,tabular" label='CRISPOR, FlashFry or other gRNA design program output file' help="The CRISPOR and Flashfry file must contain a header and 12 columns. Check the manual for specifics"/>
+        <param name='gRNAsource' type="select" label="What is the source of the gRNA file?">
+            <option value="crispor">CRISPOR</option>
+            <option value="flashfry">FlashFry</option>
+            <option value="other">Other</option>
+        </param>
+        <param argument='--selectGenes' type="data" optional="true" format="txt" label="OPTIONAL List of genes (one per line) to which amplicons and guides must be designed" help='The other genes in the fasta file will be used to check for specificity only. default: if no list is used then, for all genes in the fasta the design is done'/>
+        <param argument='--gRNAoverlap' label='The minimum number of bases between the start of two gRNAs' type="integer" value="5"/>
+        <param argument='--generateAmplicons' label="Number of amplicons to generate per gene by Primer3." help="To generate 50 amplicons per 1000 bases per gene enter -1" value="150" type="integer"/>
+        <param argument='--threshold' label='Minimum gRNA MIT score allowed (default = 80)' value="80" type="integer"/>
+        <param argument='--borderLength' value="10" type="integer" label='The length of the borders (for SMAP)'/>
+        <param argument='--ampliconLabel' type="boolean" truevalue="--ampliconLabel" falsevalue="" checked="false" label='Number the amplicons from left to right instead of from best to worst'/>
+        <param argument='--gRNAlabel' type="boolean" truevalue="--gRNAlabel" falsevalue="" checked="false" label='Number the gRNAs from left to right instead of from best to worst  (based on specificity scores)'/>
+        <param argument='--targetRegion5' label="The fraction of the coding sequencing that cannot be targeted at the 5' end as indicated by a float between 0 and 1 (default = 0.2)" value="0.2" type="float"/>
+        <param argument='--targetRegion3' label="The fraction of the coding sequencing that cannot be targeted at the 3' end as indicated by a float between 0 and 1 (default = 0.2)" value="0.2" type="float"/>
+        <param argument='--targetSpecificRegion' label='Only target a specific region in the gene indicated by the feature name in the GFF file' value="" type="text"/>
+        <param argument='--misPrimingAllowed' type="boolean" truevalue="--misPrimingAllowed" falsevalue="" label='Do not check for mispriming in the gene set when designing primers' help='By default Primer3 will not allow primers that can prime at other genes in the gene set' checked="false"/>
+        <param argument='--restrictPrimerDesign' type="boolean" truevalue="--restrictPrimerDesign" falsevalue="" label='Restrict primer design in large introns' help="Increases the speed of amplicon design. This should have no impact on the output" checked="false"/>
+        <param argument="--promoter" type="text" label='Give the last 6 bases of the promoter that will be used to express the gRNA. This will be taken into account when checking for BsaI or BbsI sites in the gRNA' help="default: U6 promoter = GTAGTG)" value="GTAGTG" />
 
-    parser.add_argument('-sg', '--selectGenes',
-                        help='List of genes (one per line) to which amplicons and guides must be designed. '
-                             'The other genes in the fasta file will be used to check for specificity only (default: for all genes in the fasta the design is done)')
+        <param argument="--scaffold" type="text" label="Give the first 6 bases of the scaffold that will be used. This will be taken into account when checking for BsaI or BbsI sites in the gRNA" value="GTTTTA"/>
 
-    parser.add_argument('-go', '--gRNAoverlap',
-                        help='The minimum number of bases between the start of two gRNAs (default = 5)',
-                        default=5, type=int)
-
-    parser.add_argument('-ga', '--generateAmplicons',
-                        help='Number of amplicons to generate per gene by Primer3 (default = 150). To generate 50 amplicons per 1000 bases per gene enter -1',
-                        default=150, type=int)
-
-    parser.add_argument('-t', '--threshold',
-                        help='Minimum gRNA MIT score allowed (default = 80)',
-                        default=80, type=int)
-
-    parser.add_argument('-b', '--borderLength',
-                        help='The length of the borders (for SMAP) (default=10)',
-                        default=10, type=int)
-
-    parser.add_argument('-al', '--ampliconLabel',
-                        help='Number the amplicons from left to right instead of from best to worst',
-                        default=False, action='store_true')
-
-    parser.add_argument('-gl', '--gRNAlabel',
-                        help='Number the gRNAs from left to right instead of from best to worst',
-                        default=False, action='store_true')
-
-    parser.add_argument('-bo', '--bordersOnly',
-                        help='Write additional GFF file with only borders (for SMAP)',
-                        default=False, action='store_true')
-
-    parser.add_argument('-tr5', '--targetRegion5',
-                        help="The fraction of the coding sequencing that cannot be targeted at the 5' end as indicated by a float between 0 and 1 (default = 0.2)",
-                        default=0.2, type=float)
-
-    parser.add_argument('-tr3', '--targetRegion3',
-                        help="The fraction of the coding sequencing that cannot be targeted at the 3' end as indicated by a float between 0 and 1 (default = 0.2)",
-                        default=0.2, type=float)
-
-
-    parser.add_argument('-aa', '--allAmplicons',
-                        help='Return all amplicons with their respective gRNAs per gene (extra file)',
-                        default=False, action='store_true')
-
-    parser.add_argument('-tsr', '--targetSpecificRegion',
-                        help='Only target a specific region in the gene indicated by the feature name in the GFF file',
-                        default=None)
-
-    parser.add_argument('-mpa', '--misPrimingAllowed',
-                        help='Do not check for mispriming in the gene set when designing primers. '
-                             'By default Primer3 will not allow primers that can prime at other genes in the gene set',
-                        default=False, action='store_true')
-
-    parser.add_argument('-rpd', '--restrictPrimerDesign',
-                        help='This option will restrict primer design in large introns, increasing the speed of amplicon design. This should have no impact on the output',
-                        default=False, action='store_true')
-
-    parser.add_argument('-prom', '--promoter',
-                        help='Give the last 6 bases of the promoter that will be used to express the gRNA. This will be taken into account when checking for BsaI or BbsI sites in the gRNA'
-                             '(default: U6 promoter = GTAGTG)',
-                        default="GTAGTG")
-
-    parser.add_argument('-scaf', '--scaffold',
-                        help='Give the first 6 bases of the scaffold that will be used. This will be taken into account when checking for BsaI or BbsI sites in the gRNA'
-                             '(default = GTTTTA)',
-                        default='GTTTTA')
-
-    parser.add_argument('-db', '--debug',
-                        help='Give a gff file with all amplicons designed by Primer3 and all gRNAs before filtering',
-                        default=False, action="store_true")
     </inputs>
     <outputs>
         <data format="gff3" name="gff_output" label="GFF3 design" />
-        <data format="tsv" name="primers_output" label="Primers tsv" />
+        <data format="tsv" name="primers_output" label="Primers sequences per gene" />
+        <data format="tsv" name="gRNA_per_gene" label="gRNA sequences per gene" />
+        <data format="tsv" name="summary" label="Summary">
+            <filter>print_summary == "--summary"</filter>
+        </data>
+        <data format="gff3" name="borders_output" label="Borders">
+            <filter>bordersOnly == "-bo"</filter>
+        </data>
     </outputs>
     <help><![CDATA[
         TODO: Fill in help.
