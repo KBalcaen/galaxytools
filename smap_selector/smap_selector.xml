@@ -1,0 +1,55 @@
+<tool id="smap_selector" name="SMAP-selector" version="0.1.0" python_template_version="3.5">
+    <requirements>
+        <!--<requirement type="package">smap-design</requirement>-->
+        <requirement type="package">biopython</requirement>
+        <requirement type="package">gffutils</requirement>
+    </requirements>
+    <command detect_errors="exit_code"><![CDATA[
+        ln -s $fasta_file species_fasta.fa;
+        ln -s $gff_file species.gff3;
+        ln -s $gene_families_file families_file.txt;
+        #if $interest_input_selector.interest_input == "genes":
+            ln -s $interest_input_selector.genes_file genes_file.txt;
+        #else
+            ln -s $interest_input_selector.homology_groups_file hom_groups_file.txt;
+        #end if
+        python3 $__tool_directory__/Get_fasta_and_gff_for_selected_hom_groups_extended_flanking_region.py ./species.gff3 ./species_fasta.fa ./families_file.txt $species --region $region
+        #if $interest_input_selector.interest_input == "genes":
+            --genes genes_file.txt
+        #else
+            --hom_groups hom_groups_file.txt
+        #end if
+        ;
+        rm species.gff3;  
+    ]]></command>
+    <inputs>
+        <param name="species" type="text" label="Species, corresponding with species indicated in the gene family info file"/>
+        <param name="gene_families_file" type="data" format="tsv,tabular" label="gene family information file (tab-delimited) for the (coding) genes, separated per gene family type"/>
+        <param name="fasta_file" type="data" format="fasta" label="FASTA file containing the genomic sequence of the species"/>
+        <param name="gff_file" type="data" format="gff,gff3" label="gff3 file (tab-delimited) of the species containing gene, CDS, and exon features with positions relative to the fasta file"/>
+        <conditional name="interest_input_selector">
+            <param name="interest_input" type="select">
+                <option value="genes">list with genes of interest</option>
+                <option value="homology_groups">list with homology groups of interest</option>
+            </param>
+            <when value="genes">
+                <param name="genes_file" type="data" format="txt" label="Genes file"/>
+            </when>
+            <when value="homology_groups">
+                <param name="homology_groups_file" type="data" format="txt" label="Homology groups file"/>
+            </when>
+        </conditional>
+        <param argument="--region" type="integer" value="0" label="Region to extend the FASTA sequence of the genes of interest on both sides with the given number of basepairs or with the maximum possible" help="default: 0"/>
+    </inputs>
+    <outputs>
+        <data format="fasta" name="fasta_outputs" label="SMAP-Selector FASTA outputs">
+            <discover_datasets pattern="(?P&lt;designation&gt;.+)\.fasta" ext="fasta" format="fasta" visible="true" assign_primary_output="true"/>
+        </data>
+        <data format="gff" name="gff_outputs" label="SMAP-Selector GFF outputs">
+            <discover_datasets pattern="(?P&lt;designation&gt;.+)\.gff" ext="gff" visible="true" format="gff" assign_primary_output="true"/>
+        </data>
+    </outputs>
+    <help><![CDATA[
+        TODO: Fill in help.
+    ]]></help>
+</tool>
