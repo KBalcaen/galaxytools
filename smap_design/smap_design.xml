@@ -15,11 +15,16 @@
             ln -s $input_source_conditional.fasta_file species_fasta.fasta;
             ln -s $input_source_conditional.gff_file species.gff3;
             ln -s $input_source_conditional.gene_families_file families_file.txt;
+            #if $input_source_conditional.interest_input_selector.interest_input == "genes":
+                ln -s $input_source_conditional.interest_input_selector.genes_file genes_file.txt;
+            #else
+                ln -s $input_source_conditional.interest_input_selector.homology_groups_file hom_groups_file.txt;
+            #end if
         python3 $__tool_directory__/Get_fasta_and_gff_for_selected_hom_groups_extended_flanking_region.py ./species.gff3 ./species_fasta.fasta ./families_file.txt $input_source_conditional.species --region $input_source_conditional.region
             #if $input_source_conditional.interest_input_selector.interest_input == "genes":
-                --genes $input_source_conditional.interest_input_selector.genes_file
+                --genes genes_file.txt
             #else
-                --hom_groups $input_source_conditional.interest_input_selector.homology_groups_file
+                --hom_groups hom_groups_file.txt
             #end if
             &&
             ######  need to set the design_input_fasta and design_input_gff3 vars
@@ -73,7 +78,7 @@
     <inputs>
         <conditional name="input_source_conditional">
         <param name="input_source" type="select">
-            <option value="smap_selector">Generate the target genes using SMAP selector</option>
+            <option value="smap_selector">Generate the target gene using SMAP selector</option>
             <option value="pregenerated_inputs">Use pregenerated inputs</option>
         </param>
         <when value="smap_selector">
