@@ -1,0 +1,341 @@
+<tool id="mcdoe" name="MultiplexCrisprDOE - simulation- and BioCCP-based approaches for computing the minimal plant library size" version="0.1.0" python_template_version="3.5">
+    <requirements>
+        <requirement type="package" version="1.7.2">julia</requirement>
+    </requirements>
+    <command detect_errors="exit_code"><![CDATA[
+        
+        ## method $t $x $g $r $n_gRNA_total $filename $filename $ϵ_KO --i 10
+
+        #if $tools.tool_selector == "gfd"
+            julia '$__tool_directory__/main.jl' gfd $tools.pls $tools.sd $tools.min_gRNA_abundance 
+            $tools.max_gRNA_abundance $tools.n_gRNA_total $tools.normalize
+            &&
+            mv ./gRNA_reads.xlsx $gRNA_reads
+        #elif $tools.tool_selector == "ged"
+            julia '$__tool_directory__/main.jl' ged $tools.f_act $tools.eps_edit_act $tools.eps_edit_inact 
+            $tools.sd_act $tools.n_gRNA_total
+            &&
+            mv ./gRNA_edit.xlsx $gRNA_edit
+        #elif $tools.tool_selector == "sim"
+            julia '$__tool_directory__/main.jl' sim $tools.simulation_mode.simulation_mode_selector $tools.n_target_genes 
+            $tools.n_designed_gRNAs $tools.simulation_mode.n_gRNA_seqs $tools.n_gRNA_total $tools.p_gRNA_freq 
+            $tools.p_gRNA_edit $tools.g_KO --iter $tools.iter
+            #if $tools.simulation_mode.simulation_mode_selector == "4"
+                &&
+                mv ./countKOs.xlsx $countKOs
+            #end if
+        #elif $tools.tool_selector == "ccp"
+            julia '$__tool_directory__/main.jl' ccp $tools.bioccp_mode.bioccp_mode_selector $tools.n_target_genes $tools.pls 
+            $tools.n_designed_gRNAs $tools.bioccp_mode.n_gRNA_seqs $tools.n_gRNA_total $tools.p_gRNA_freq 
+            $tools.p_gRNA_edit $tools.g_KO --step $tools.step --MN $tools.max_pls
+        #end if
+        &&
+        mv ./report.html $report
+
+    ]]></command>
+    <inputs>
+        <conditional name="tools">
+            <param name="tool_selector" type="select" label="Select tool for processing the alignment(s)">
+                <option value="gfd">Generate vector with frequencies in the combinatorial gRNA/Cas9 construct library for all gRNAs</option>
+                <option value="ged">Generate vector with genome editing efficiencies for all the gRNAs in the experiment</option>
+                <option value="sim">Simulation-based approaches for computing the minimal plant library size that guarantees full combinatorial coverage</option>
+                <option value="ccp">BioCCP-based approaches for computing the minimal plant library size that guarantees full combinatorial coverage</option>
+            </param>
+            <when value="gfd">
+                <param name="pls" type="integer" value="75" optional="false" />
+                <param name="sd" type="integer" value="25" optional="false" />
+                <param name="min_gRNA_abundance" value="50" type="integer" optional="false" />
+                <param name="max_gRNA_abundance" value="100" type="integer" optional="false" />
+                <param name="n_gRNA_total" value="120" type="integer" optional="false" />
+                <param name="normalize" type="boolean" truevalue="--normalize" falsevalue="" checked="False" label="Convert gRNA abundances into relative frequencies" />
+            </when>
+            <when value="ged">
+                <param name="f_act" type="float" value="0.9" optional="false" />
+                <param name="eps_edit_act" type="float" value="0.95" optional="false" />
+                <param name="eps_edit_inact" type="float" value="0.1" optional="false" />
+                <param name="sd_act" type="float" value="0.01" optional="false" />
+                <param name="n_gRNA_total" type="integer" value="120" optional="false" />
+            </when>
+            <when value="sim">
+                <conditional name="simulation_mode">
+                    <param name="simulation_mode_selector" type="select" label="Select simulation mode:">
+                        <option value="1">simulate_Nₓ₁</option>
+                        <option value="2">simulate_Nₓ₂</option>
+                        <option value="3">simulate_Nₓ₃</option>
+                        <option value="4">simulate_Nₓ₂_countKOs</option>
+                    </param>
+                    <when value="1">
+                        <param name="n_gRNA_seqs" value="1" min="1" label="Number of gRNA sequences per combinatorial gRNA/Cas construct" type="integer" optional="false" />
+                    </when>
+                    <when value="2">
+                        <param name="n_gRNA_seqs" value="2" min="2" label="Number of gRNA sequences per combinatorial gRNA/Cas construct" type="integer" optional="false" />
+                    </when>
+                    <when value="3">
+                        <param name="n_gRNA_seqs" value="3" min="3" label="Number of gRNA sequences per combinatorial gRNA/Cas construct" type="integer" optional="false" />
+                    </when>
+                    <when value="4">
+                        <param name="n_gRNA_seqs" value="2" min="2" label="Number of gRNA sequences per combinatorial gRNA/Cas construct" type="integer" optional="false" />
+                    </when>
+                </conditional>
+                <param name="n_target_genes" value="20" label="Number of target genes in the experiment" type="integer" optional="false" />
+                <param name="n_designed_gRNAs" value="6" label="Number of gRNAs designed per target gene" type="integer" optional="false" />
+                <param name="n_gRNA_total" value="120" label="Total number of gRNAs in the experiment" type="integer" optional="false" />
+                <param name="p_gRNA_freq" label="Vector (excel file) with relative frequencies for all gRNAs in the construct library (normalized!)" type="data" format="xlsx" optional="false" />
+                <param name="p_gRNA_edit" label="Vector (excel file) with genome editing efficiencies for all gRNAs" type="data" format="xlsx" optional="false" />
+                <param name="g_KO" value="0.8" label="Global knockout efficiency; fraction of mutations leading to effective gene knockout" type="float" optional="false" />
+                <param name="iter" value="400" label="Number of CRISPR/Cas experiments that are simulated" type="integer" />
+            </when>
+            <when value="ccp">
+                <conditional name="bioccp_mode">
+                    <param name="bioccp_mode_selector" type="select" label="Select BioCCP mode:">
+                        <option value="1">BioCCP_Nₓ₁</option>
+                        <option value="2">BioCCP_Nₓ₂</option>
+                        <option value="3">BioCCP_Nₓ₃</option>
+                        <option value="4">BioCCP_Pₓ₁</option>
+                        <option value="5">BioCCP_Pₓ₂</option>
+                        <option value="6">BioCCP_Pₓ₃</option>
+                        <option value="7">BioCCP_γₓ₁</option>
+                        <option value="8">BioCCP_γₓ₂</option>
+                        <option value="9">BioCCP_γₓ₃</option>
+                    </param>
+                    <when value="1">
+                        <param name="n_gRNA_seqs" value="1" min="1" label="Number of gRNA sequences per combinatorial gRNA/Cas construct" type="integer" optional="false" />
+                    </when>
+                    <when value="2">
+                        <param name="n_gRNA_seqs" value="2" min="2" label="Number of gRNA sequences per combinatorial gRNA/Cas construct" type="integer" optional="false" />
+                    </when>
+                    <when value="3">
+                        <param name="n_gRNA_seqs" value="3" min="3" label="Number of gRNA sequences per combinatorial gRNA/Cas construct" type="integer" optional="false" />
+                    </when>
+                    <when value="4">
+                        <param name="n_gRNA_seqs" value="1" min="1" label="Number of gRNA sequences per combinatorial gRNA/Cas construct" type="integer" optional="false" />
+                    </when>
+                    <when value="5">
+                        <param name="n_gRNA_seqs" value="2" min="2" label="Number of gRNA sequences per combinatorial gRNA/Cas construct" type="integer" optional="false" />
+                    </when>
+                    <when value="6">
+                        <param name="n_gRNA_seqs" value="3" min="3" label="Number of gRNA sequences per combinatorial gRNA/Cas construct" type="integer" optional="false" />
+                    </when>
+                    <when value="7">
+                        <param name="n_gRNA_seqs" value="1" min="1" label="Number of gRNA sequences per combinatorial gRNA/Cas construct" type="integer" optional="false" />
+                    </when>
+                    <when value="8">
+                        <param name="n_gRNA_seqs" value="2" min="2" label="Number of gRNA sequences per combinatorial gRNA/Cas construct" type="integer" optional="false" />
+                    </when>
+                    <when value="9">
+                        <param name="n_gRNA_seqs" value="3" min="3" label="Number of gRNA sequences per combinatorial gRNA/Cas construct" type="integer" optional="false" />
+                    </when>
+                </conditional>
+                <param name="n_target_genes" value="20" label="Number of target genes in the experiment" type="integer" optional="false" />
+                <param name="n_designed_gRNAs" value="6" label="Number of gRNAs designed per target gene" type="integer" optional="false" />
+                <param name="n_gRNA_total" value="120" label="Total number of gRNAs in the experiment" type="integer" optional="false" />
+                <param name="p_gRNA_freq" label="Vector (excel file) with relative frequencies for all gRNAs in the construct library (normalized!)" type="data" format="xlsx" optional="false" />
+                <param name="p_gRNA_edit" label="Vector (excel file) with genome editing efficiencies for all gRNAs" type="data" format="xlsx" optional="false" />
+                <param name="g_KO"  value="0.8" label="Global knockout efficiency; fraction of mutations leading to effective gene knockout" type="float" optional="false" />
+                <param name="pls" value="0" label="(Minimum) plant library size" type="integer" optional="true" />
+                <param name="step"  value="5" label="Step size for plant library size (optional for calculating expected combinatorial coverage / plant library size)" type="integer" optional="true" />
+                <param name="max_pls"  value="4000" label="Maximum plant library size (optional for calculating expected combinatorial coverage / plant library size)" type="integer" optional="true" />
+           </when>
+        </conditional>
+    </inputs>
+    <outputs>
+        <data name="report" format="html" label="report" />
+        <data name="gRNA_reads" format="xlsx" label="Vector with relative frequencies for all gRNAs in the construct library (normalized!)">
+            <filter>tools['tool_selector']=='gfd'</filter>
+        </data>
+        <data name="gRNA_edit" format="xlsx" label="Vector with genome editing efficiencies for all gRNAs">
+            <filter>tools['tool_selector']=='ged'</filter>
+        </data>
+        <data name="countKOs" format="xlsx" label="Vector with counts of the number of knockouts per plant in the experiment" >
+            <filter>tools['tool_selector']=='sim' and tools['bioccp_mode_selector']=='4'</filter>
+        </data>
+    </outputs>
+    <tests>
+        <test>
+            <param name="tool_selector" value="gfd" />
+            <param name="pls" value="75"/>
+            <param name="sd" value="25" />
+            <param name="min_gRNA_abundance" value="50" />
+            <param name="max_gRNA_abundance" value="100" />
+            <param name="n_gRNA_total" value="120" />
+            <param name="normalize" value="false" />
+            <output name="report" file="test_gfd_report.html" compare="sim_size" />
+            <output name="gRNA_reads" file="test_gRNA_reads.xlsx" ftype="xlsx" compare="sim_size"/>
+        </test>
+        <test>
+            <param name="tool_selector" value="ged" />
+            <param name="f_act" value="0.9"/>
+            <param name="eps_edit_act" value="0.95" />
+            <param name="eps_edit_inact" value="0.1" />
+            <param name="sd_act" value="0.01" />
+            <param name="n_gRNA_total" value="120" />
+            <output name="report" file="test_ged_report.html" compare="sim_size" />
+            <output name="gRNA_edit" file="test_gRNA_edit.xlsx" ftype="xlsx" compare="sim_size"/>
+        </test>
+        <test>
+            <param name="tool_selector" value="sim" />
+            <param name="simulation_mode_selector" value="4" />
+            <param name="n_gRNA_seqs" value="2" />
+            <param name="n_target_genes" value="20" />
+            <param name="n_designed_gRNAs" value="6" />
+            <param name="n_gRNA_total" value="120" />
+            <param name="p_gRNA_freq" value="example_data.xlsx" />
+            <param name="p_gRNA_edit" value="example_data.xlsx" />
+            <param name="g_KO" value="0.8" />
+            <param name="iter" value="10" />
+            <output name="report" file="test_sim_report.html" compare="sim_size" />
+            <output name="countKOs" file="test_countKOs.xlsx" ftype="xlsx" compare="sim_size"/>
+        </test>
+        <test>
+            <param name="tool_selector" value="ccp" />
+            <param name="bioccp_mode_selector" value="9" />
+            <param name="n_gRNA_seqs" value="3" />
+            <param name="n_target_genes" value="20" />
+            <param name="n_designed_gRNAs" value="6" />
+            <param name="n_gRNA_total" value="120" />
+            <param name="p_gRNA_freq" value="example_data.xlsx" />
+            <param name="p_gRNA_edit" value="example_data.xlsx" />
+            <param name="g_KO" value="0.8" />
+            <param name="pls" value="0" />
+            <param name="step"  value="5" />
+            <param name="max_pls"  value="4000" />
+            <output name="report" file="test_ccp_report.html" compare="sim_size" />
+        </test>
+    </tests>
+    <help><![CDATA[
+usage: main.jl [-h] {gfd|ged|sim|ccp}
+
+MultiplexCrisprDOE
+
+commands:
+  gfd         gRNA/Cas9 frequencies
+  ged         gRNA/Cas9 editing efficiencies
+  sim         simulation-based approaches for computing the minimal
+              plant library size that guarantees full combinatorial
+              coverage (and other relevant statistics)
+  ccp         BioCCP-based approaches for computing the minimal plant
+              library size that guarantees full combinatorial coverage
+              (and other relevant statistics)
+
+usage: main.jl gfd [--normalize] [--visualize] [--out_file OUT_FILE]
+                   [-h] [m] [sd] [l] [u] [n]
+
+positional arguments:
+  m                    plant library size (type: Int64)
+  sd                   the standard deviation on the gRNA abundances
+                       (in terms of absolute or relative frequency)
+                       (type: Int64)
+  l                    minimal gRNA abundance (in terms of absolute or
+                       relative frequency) (type: Int64)
+  u                    maximal gRNA abundance (in terms of absolute or
+                       relative frequency) (type: Int64)
+  n                    the total number of gRNAs in the experiment
+                       (type: Int64)
+
+optional arguments:
+  --normalize          if provided, the gRNA abundances (absolute
+                       frequencies) are converted into relative
+                       frequencies
+  --visualize          if provided, a histogram of all gRNA abundances
+                       is plotted
+  --out_file OUT_FILE  Output excel file prefix (default:
+                       "gRNA_reads")
+  -h, --help           show this help message and exit
+
+                   [eps_edit_act] [eps_edit_inact] [sd_act]
+                   [n_gRNA_total]
+
+positional arguments:
+  f_act                fraction of all gRNAs that is active (type:
+                       Float16)
+  eps_edit_act         Average genome editing efficiency for active
+                       gRNAs - mean of the genome editing efficiency
+                       distribution for active gRNAs (type: Float16)
+  eps_edit_inact       Average genome editing efficiency for inactive
+                       gRNAs - mean of the genome editing efficiency
+                       distribution for inactive gRNAs (type: Float16)
+  sd_act               standard deviation of the genome editing
+                       efficiency distributions for active and
+                       inactive gRNAs (type: Float16)
+  n_gRNA_total         the total number of gRNAs in the experiment
+                       (type: Int64)
+
+optional arguments:
+  --visualize          if provided a histogram of all genome editing
+                       efficiency is plotted
+  --out_file OUT_FILE  Output excel file prefix (default: "gRNA_edit")
+  -h, --help           show this help message and exit
+
+usage: main.jl sim [--i I] [-h] [M] [x] [g] [r] [t] [f] [e] [E]
+
+positional arguments:
+  M              Select simulation mode (1: simulate_Nₓ₁; 2:
+                 simulate_Nₓ₂; 3: simulate_Nₓ₃; 4:
+                 simulate_Nₓ₂_countKOs) (type: Int64)
+  x              number of target genes in the experiment (type:
+                 Int64)
+  g              number of gRNAs designed per target gene (type:
+                 Int64)
+  r              number of gRNA sequences per combinatorial gRNA/Cas
+                 construct (type: Int64)
+  t              total number of gRNAs in the experiment (type: Int64)
+  f              vector with relative frequencies for all gRNAs in the
+                 construct library (normalized!)
+  e              vector with genome editing efficiencies for all gRNAs
+  E              global knockout efficiency; fraction of mutations
+                 leading to effective gene knockout (type: Float16)
+
+optional arguments:
+  --i, --iter I  number of CRISPR/Cas experiments that are simulated
+                 (type: Int64, default: 500)
+  -h, --help     show this help message and exit
+
+usage: main.jl ccp [--s S] [--MN MN] [-h] [M] [x] [N] [g] [r] [t] [f]
+                   [e] [E]
+
+positional arguments:
+  M                     Select BioCCP mode (1: BioCCP_Nₓ₁; 2:
+                        BioCCP_Nₓ₂; 3: BioCCP_Nₓ₃; 4: BioCCP_Pₓ₁; 5:
+                        BioCCP_Pₓ₂ ; 6: BioCCP_Pₓ₃; 7: BioCCP_γₓ₁; 8:
+                        BioCCP_γₓ₂; 9: BioCCP_γₓ₃) (type: Int64)
+  x                     number of target genes in the experiment
+                        (type: Int64)
+  N                     (Minimum) plant library size (type: Int64)
+  g                     number of gRNAs designed per target gene
+                        (type: Int64)
+  r                     number of gRNA sequences per combinatorial
+                        gRNA/Cas construct (type: Int64)
+  t                     total number of gRNAs in the experiment (type:
+                        Int64)
+  f                     File containing vector with relative
+                        frequencies for all gRNAs in the construct
+                        library (normalized!)
+  e                     File containing vector with genome editing
+                        efficiencies for all gRNAs
+  E                     global knockout efficiency; fraction of
+                        mutations leading to effective gene knockout
+                        (type: Float16)
+
+optional arguments:
+  --s, --step S         Step size for plant library size (optional for
+                        calculating expected combinatorial coverage /
+                        plant library size) (type: Int64, default: 5)
+  --MN, --max_pl_size MN
+                        Maximum plant library size (optional for
+                        calculating expected combinatorial coverage /
+                        plant library size) (type: Int64, default:
+                        4000)
+  -h, --help            show this help message and exit
+    ]]></help>
+    <citations>
+        <citation type="bibtex">
+@misc{githubMultiplexCrisprDOE,
+  author = {LastTODO, FirstTODO},
+  year = {TODO},
+  title = {MultiplexCrisprDOE},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  url = {https://github.com/kirstvh/MultiplexCrisprDOE},
+}</citation>
+    </citations>
+</tool>
