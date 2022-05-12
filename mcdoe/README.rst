@@ -1,5 +1,4 @@
-PhyKIT
-=======
-PhyKIT is a UNIX shell toolkit for processing and analyzing phylogenomic data.
-PhyKIT helps process and analyze multiple sequence alignments and phylogenies.
-Generally, all functions are designed to help understand the contents of alignments (e.g., gc content or the number of parsimony informative sites) and the shape of trees (e.g., treeness, degree of violation of a molecular clock).
+MultiplexCrisprDOE
+==================
+provides simulation- and BioCCP-based approaches for computing the minimal plant library size 
+that guarantees full combinatorial coverage (and other relevant statistics) for multiplex CRISPR/Cas experiments in plants.

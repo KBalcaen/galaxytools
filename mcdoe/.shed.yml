@@ -1,9 +1,9 @@
 categories:
-- Phylogenetics
-description: Toolkit for processing and analyzing phylogenomic data
+- Sequence Analysis
+description: Tool for computing the minimal plant library size for multiplex CRISPR/Cas
 homepage_url: https://jlsteenwyk.com/PhyKIT/index.html
-long_description: PhyKIT, a toolkit for the UNIX shell environment with numerous functions
-  that process multiple sequence alignments and phylogenies for broad applications
-name: phykit
+long_description: MultiplexCrisprDOE, provides simulation- and BioCCP-based approaches for computing the minimal plant library size 
+  that guarantees full combinatorial coverage (and other relevant statistics) for multiplex CRISPR/Cas experiments in plants.
+name: mcdoe
 owner: padge
-remote_repository_url: https://github.com/JLSteenwyk/PhyKIT
+remote_repository_url: https://github.com/kirstvh/MultiplexCrisprDOE
