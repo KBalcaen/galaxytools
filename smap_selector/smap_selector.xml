@@ -3,6 +3,7 @@
         <!--<requirement type="package">smap-design</requirement>-->
         <requirement type="package">biopython</requirement>
         <requirement type="package">gffutils</requirement>
+        <requirement type="package">pandas</requirement>
     </requirements>
     <command detect_errors="exit_code"><![CDATA[
         ln -s $fasta_file species_fasta.fa;
