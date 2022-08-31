@@ -1,15 +1,15 @@
 using Pkg
-Pkg.add("Plots");
-Pkg.add("Distributions");
+Pkg.add(Pkg.PackageSpec(name="Plots", version="1.31.7"));
+Pkg.add(Pkg.PackageSpec(name="Distributions", version="0.25.68"));
 Pkg.add("LinearAlgebra");
-Pkg.add("Combinatorics");
-Pkg.add("BioCCP");
-Pkg.add("ArgParse");
-Pkg.add("XLSX");
-Pkg.add("DataFrames");
-Pkg.add("Weave");
-Pkg.add("DataStructures");
-Pkg.add("PrettyTables");
+Pkg.add(Pkg.PackageSpec(name="Combinatorics", version="1.0.2"));
+Pkg.add(Pkg.PackageSpec(name="BioCCP", version="0.1.1"));
+Pkg.add(Pkg.PackageSpec(name="ArgParse", version="1.1.4"));
+Pkg.add(Pkg.PackageSpec(name="XLSX", version="0.8.2"));
+Pkg.add(Pkg.PackageSpec(name="DataFrames", version="1.3.4"));
+Pkg.add(Pkg.PackageSpec(name="Weave", version="0.10.10"));
+Pkg.add(Pkg.PackageSpec(name="DataStructures", version="0.18.13"));
+Pkg.add(Pkg.PackageSpec(name="PrettyTables", version="1.3.1"));
 
 using Random
 using Plots
@@ -267,7 +267,7 @@ function main(args)
 
         filename = command_args["f"]
         sheet = 1
-        data = DataFrame(XLSX.readtable(filename, sheet)...)
+        data = DataFrame(XLSX.readtable(filename, sheet))
         p_gRNA_reads = data[!,"gRNA_read"]
         p_gRNA_reads_normalized = p_gRNA_reads/sum(p_gRNA_reads)  # normalize
         f = p_gRNA_reads_normalized
@@ -275,7 +275,7 @@ function main(args)
 
         filename = command_args["e"]
         sheet = 1
-        data = DataFrame(XLSX.readtable(filename, sheet)...)
+        data = DataFrame(XLSX.readtable(filename, sheet))
         p_gRNA_edit = data[!,"gRNA_edit_efficiency"]
         e = p_gRNA_edit
         grna_dict["p_gRNA_edit"] = e
