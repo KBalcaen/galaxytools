@@ -15,7 +15,7 @@
 
     ]]></command>
     <inputs>
-        <param name="input1" type="data" format="fasta,clustal,pir,phylip,nexus" multiple="false" label="Alignment file (clustal, fasta, NBRF/PIR, nexus, phylip3.2, phylip)" optional="false" />
+        <param name="input1" type="data" format="fasta,clustal,pir,phylip,nexus,mega" multiple="false" label="Alignment file (clustal, fasta, NBRF/PIR, nexus, phylip3.2, phylip)" optional="false" />
         <conditional name="trimming_mode">
             <param name="mode_selector" type="select" label="Select trimming mode from the list">
                 <option value="-nogaps">nogaps. Remove all positions with gaps in the alignment.</option>
@@ -48,7 +48,22 @@
         </param>
     </inputs>
     <outputs>
-        <data name="trimmed_output" format="fasta" label="Trimmed alignment."/>
+        <data name="trimmed_output" format="fasta" label="Trimmed alignment.">
+            <change_format>
+                <when input="out_format_selector" value="-fasta" format="fasta" />
+                <when input="out_format_selector" value="-fasta_m10" format="fasta" />
+                <when input="out_format_selector" value="-phylip" format="phylip" />
+                <when input="out_format_selector" value="-phylip_m10" format="phylip" />
+                <when input="out_format_selector" value="-phylip_paml" format="phylip" />
+                <when input="out_format_selector" value="-phylip_paml_m10" format="phylip" />
+                <when input="out_format_selector" value="-phylip3.2" format="phylip" />
+                <when input="out_format_selector" value="-phylip3.2_m10" format="phylip" />
+                <when input="out_format_selector" value="-clustal" format="clustal" />
+                <when input="out_format_selector" value="-mega" format="mega" />
+                <when input="out_format_selector" value="-nbrf" format="pir" />
+                <when input="out_format_selector" value="-nexus" format="nexus" />
+            </change_format>
+        </data>
         <data name="html_summary" format="html" label="trimal html summary."/>
     </outputs>
     <tests>

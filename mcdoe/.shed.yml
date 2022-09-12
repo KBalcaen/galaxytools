@@ -1,7 +1,7 @@
 categories:
 - Sequence Analysis
 description: Tool for computing the minimal plant library size for multiplex CRISPR/Cas
-homepage_url: https://jlsteenwyk.com/PhyKIT/index.html
+homepage_url: https://github.com/kirstvh/MultiplexCrisprDOE
 long_description: MultiplexCrisprDOE, provides simulation- and BioCCP-based approaches for computing the minimal plant library size 
   that guarantees full combinatorial coverage (and other relevant statistics) for multiplex CRISPR/Cas experiments in plants.
 name: mcdoe
