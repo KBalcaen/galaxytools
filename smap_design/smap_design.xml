@@ -32,20 +32,20 @@
             design_input_gff3=`ls *_bp.gff`;
         #end if
         python3 $__tool_directory__/smap_design/SMAPdesign.py
-            --output 'OUTPUT' 
+            --output '$output_prefix' 
             --minimumAmpliconLength $min_amplicon_length 
             --maximumAmpliconLength $max_amplicon_length 
             --numbergRNAs $number_grnas 
             --numberAmplicons $number_amplicons 
-            #if $print_summary:
-                --summary
-            #end if
             $bordersOnly
-            --distance $distance
             $print_summary
+            $print_debug
+            --distance $distance
             $allAmplicons
-            --gRNAfile $gRNAfile
-            --gRNAsource $gRNAsource.value
+            #if $conditional_include_grna_file.select_include_grna_file == "include_grna_file":
+                --gRNAfile $conditional_include_grna_file.gRNAfile
+                --gRNAsource $conditional_include_grna_file.gRNAsource.value
+            #end if
             #if $selectGenes:
                 --selectGenes $selectGenes
             #end if
@@ -54,6 +54,7 @@
             --threshold $threshold
             --borderLength $borderLength
             $ampliconLabel
+            $gRNAlabel
             --targetRegion5 $targetRegion5
             --targetRegion3 $targetRegion3
             #if $targetSpecificRegion:
@@ -64,20 +65,32 @@
             --promoter '$promoter'
             --scaffold '$scaffold'
             \$design_input_fasta \$design_input_gff3;
-        mv OUTPUT.gff3 $gff_output;
-        mv OUTPUT_primers.tsv $primers_output;
-        mv OUTPUT_gRNAs.tsv $gRNA_per_gene;
-        #if $print_summary:
-            mv OUTPUT_SMAPdesign_summary.tsv $summary;
+        mv $output_prefix\.gff3 $gff_output;
+        mv $output_prefix\_primers.tsv $primers_output;
+        mv $output_prefix\_gRNAs.tsv $gRNA_per_gene;
+        #if $print_summary == '--summary': 
+            mv $output_prefix\_summary.tsv $summary;
+            mv $output_prefix\_summary_plot.png $summary_plot;
         #end if
-        #if $bordersOnly:
-            mv OUTPUT_SMAPdesign_borders.gff3 $borders_output;
+        #if $bordersOnly == '-bo':
+            mv $output_prefix\_borders.gff3 $borders_output;
+            mv $output_prefix\_SMAPs.bed $borders_smaps_output;
+        #end if
+        #if $print_debug == '--print_debug':
+            mv $output_prefix\_debug.gff3 $debug_out;
+        #end if
+        #if $allAmplicons == '--allAmplicons':
+            mv $output_prefix\_allAmplicons.gff3 $allAmplicons_gff3_output;
+            mv $output_prefix\_allAmplicons_borders.gff3 $allAmplicons_borders_output;
+            mv $output_prefix\_allAmplicons_gRNAs.tsv $allAmplicons_gRNAs_output;
+            mv $output_prefix\_allAmplicons_primers.tsv $allAmplicons_primers_output;
+            mv $output_prefix\_allAmplicons_SMAPs.bed $allAmplicons_smaps_output;
         #end if
         ;
     ]]></command>
     <inputs>
         <conditional name="input_source_conditional">
-        <param name="input_source" type="select">
+        <param name="input_source" label="Select how you want to define the inputs for the design process" type="select">
             <option value="smap_selector">Generate the target gene using SMAP selector</option>
             <option value="pregenerated_inputs">Use pregenerated inputs</option>
         </param>
@@ -87,7 +100,7 @@
             <param name="fasta_file" type="data" format="fasta" label="FASTA file containing the genomic sequence of the species"/>
             <param name="gff_file" type="data" format="gff,gff3" label="gff3 file (tab-delimited) of the species containing gene, CDS, and exon features with positions relative to the fasta file"/>
             <conditional name="interest_input_selector">
-                <param name="interest_input" type="select">
+                <param name="interest_input" label="Select the type of interest list you will provide" type="select">
                     <option value="genes">list with genes of interest</option>
                     <option value="homology_groups">list with homology groups of interest</option>
                 </param>
@@ -113,14 +126,26 @@
         <param name="max_amplicon_length" type="integer" value="150" label="The maximum length of the amplicons in base pairs (default = 120)" help=""/>
         <param name="distance" type="integer" optional="true" value="15" label="Minimum number of bases between primer and gRNA (default = 15)" help=""/>
         <param name="print_summary" type="boolean" truevalue="--summary" falsevalue="" label="Write summary file and plot of the output"/>
+        <param name="print_debug" type="boolean" truevalue="--debug" falsevalue="" label="Write additional GFF file with all amplicons designed by Primer3 and all gRNAs before filtering."/>
+        <param name="output_prefix" type="text" optional="false" value="OUTPUT" label="Define the outputs name prefix"/>
+
         <param argument='--allAmplicons' type="boolean" truevalue="--allAmplicons" falsevalue="" label='Return all amplicons with their respective gRNAs per gene (extra file)'/>
         <param name='bordersOnly' type="boolean" truevalue="-bo" falsevalue="" checked="false" label='Write additional GFF file with only borders (for SMAP)'/>
-        <param argument='--gRNAfile' type="data" format="tsv,tabular" label='CRISPOR, FlashFry or other gRNA design program output file' help="The CRISPOR and Flashfry file must contain a header and 12 columns. Check the manual for specifics"/>
-        <param name='gRNAsource' type="select" label="What is the source of the gRNA file?">
-            <option value="crispor">CRISPOR</option>
-            <option value="flashfry">FlashFry</option>
-            <option value="other">Other</option>
+
+        <conditional name="conditional_include_grna_file">
+        <param label="Do you want to include a gRNA file?" name="select_include_grna_file" type="select">
+            <option value="not_include_grna_file">Do not include gRNA files</option>
+            <option value="include_grna_file">Include a gRNA file</option>
         </param>
+        <when value="include_grna_file">
+            <param argument='--gRNAfile' type="data" format="tsv,tabular" label='CRISPOR, FlashFry or other gRNA design program output file' help="The CRISPOR and Flashfry file must contain a header and 12 columns. Check the manual for specifics"/>
+            <param name='gRNAsource' type="select" label="What is the source of the gRNA file?">
+                <option value="crispor">CRISPOR</option>
+                <option value="flashfry">FlashFry</option>
+                <option value="other">Other</option>
+            </param>
+        </when>
+        </conditional>
         <param argument='--selectGenes' type="data" optional="true" format="txt" label="OPTIONAL List of genes (one per line) to which amplicons and guides must be designed" help='The other genes in the fasta file will be used to check for specificity only. default: if no list is used then, for all genes in the fasta the design is done'/>
         <param argument='--gRNAoverlap' label='The minimum number of bases between the start of two gRNAs' type="integer" value="5"/>
         <param argument='--generateAmplicons' label="Number of amplicons to generate per gene by Primer3." help="To generate 50 amplicons per 1000 bases per gene enter -1" value="150" type="integer"/>
@@ -139,14 +164,38 @@
 
     </inputs>
     <outputs>
-        <data format="gff3" name="gff_output" label="GFF3 design" />
-        <data format="tsv" name="primers_output" label="Primers sequences per gene" />
-        <data format="tsv" name="gRNA_per_gene" label="gRNA sequences per gene" />
-        <data format="tsv" name="summary" label="Summary">
-            <filter>print_summary == "--summary"</filter>
+        <data format="gff3" name="gff_output" label="${output_prefix} GFF3 design" />
+        <data format="tsv" name="primers_output" label="${output_prefix} Primers sequences per gene" />
+        <data format="tsv" name="gRNA_per_gene" label="${output_prefix} gRNA sequences per gene" />
+        <data format="gff3" name="debug_out" label="${output_prefix} Debug">
+            <filter>print_debug</filter>
         </data>
-        <data format="gff3" name="borders_output" label="Borders">
-            <filter>bordersOnly == "-bo"</filter>
+        <data format="tsv" name="summary" label="${output_prefix} Summary">
+            <filter>print_summary</filter>
+        </data>
+        <data format="png" name="summary_plot" label="${output_prefix} Summary Plot">
+            <filter>print_summary</filter>
+        </data>
+        <data format="gff3" name="borders_output" label="${output_prefix} Borders">
+            <filter>bordersOnly</filter>
+        </data>
+        <data format="bed" name="borders_smaps_output" label="${output_prefix} Borders SMAPs">
+            <filter>bordersOnly</filter>
+        </data>
+        <data format="gff3" name="allAmplicons_gff3_output" label="${output_prefix} All Amplicons GFF3">
+            <filter>allAmplicons</filter>
+        </data>
+        <data format="gff3" name="allAmplicons_borders_output" label="${output_prefix} All Amplicons Borders">
+            <filter>allAmplicons</filter>
+        </data>
+        <data format="tsv" name="allAmplicons_gRNAs_output" label="${output_prefix} All Amplicons gRNAs">
+            <filter>allAmplicons</filter>
+        </data>
+        <data format="tsv" name="allAmplicons_primers_output" label="${output_prefix} All Amplicons Primers">
+            <filter>allAmplicons</filter>
+        </data>
+        <data format="bed" name="allAmplicons_smaps_output" label="${output_prefix} All Amplicons SMAPs">
+            <filter>allAmplicons</filter>
         </data>
     </outputs>
     <help><![CDATA[
