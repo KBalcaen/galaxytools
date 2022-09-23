@@ -29,12 +29,16 @@
             &&
             ######  need to set the design_input_fasta and design_input_gff3 vars
             design_input_fasta=`ls *_bp.fasta` &&
-            design_input_gff3=`ls *_bp.gff`;
+            design_input_gff3=`ls *_selected_genes_extended_$input_source_conditional.region\_bp.gff`;
         #end if
         python3 $__tool_directory__/smap_design/SMAPdesign.py
             --output '$output_prefix' 
             --minimumAmpliconLength $min_amplicon_length 
             --maximumAmpliconLength $max_amplicon_length 
+            --primerMaxLibraryMispriming $primer_max_lib_mispriming
+            --primerPairMaxLibraryMispriming $primer_pair_max_lib_mispriming
+            --primerMaxTemplateMispriming $primer_max_template_mispriming 
+            --primerPairMaxTemplateMispriming $primer_pair_max_template_mispriming
             --numbergRNAs $number_grnas 
             --numberAmplicons $number_amplicons 
             $bordersOnly
@@ -76,7 +80,7 @@
             mv $output_prefix\_borders.gff3 $borders_output;
             mv $output_prefix\_SMAPs.bed $borders_smaps_output;
         #end if
-        #if $print_debug == '--print_debug':
+        #if $print_debug == '--debug':
             mv $output_prefix\_debug.gff3 $debug_out;
         #end if
         #if $allAmplicons == '--allAmplicons':
@@ -124,6 +128,10 @@
         <param name="number_grnas" type="integer" value="2" label="Maximum number of gRNAs to retain per amplicon (default = 2)" help=""/>
         <param name="min_amplicon_length" type="integer" value="120" label="The minimum length of the amplicons in base pairs (default = 120)" help=""/>
         <param name="max_amplicon_length" type="integer" value="150" label="The maximum length of the amplicons in base pairs (default = 120)" help=""/>
+        <param name="primer_max_lib_mispriming" value="12" type="integer" help="--primerMaxLibraryMispriming" label="The maximum allowed weighted similarity of a primer with any sequence in the target gene set (Primer3 setting)"/>
+        <param name="primer_pair_max_lib_mispriming" value="24" type="integer" help="--primerPairMaxLibraryMispriming" label="The maximum allowed sum of similarities of a primer pair (one similarity for each primer) with any single sequence in the target gene set (Primer3 setting) " />
+        <param name="primer_max_template_mispriming" value="12" type="integer" help="--primerMaxTemplateMispriming" label="The maximum allowed similarity of a primer to ectopic sites in the template (Primer3 setting)"/>
+        <param name="primer_pair_max_template_mispriming" value="24" type="integer" help="--primerPairMaxTemplateMispriming" label="The maximum allowed summed similarity of both primers to ectopic sites in the template (Primer3 setting)" />
         <param name="distance" type="integer" optional="true" value="15" label="Minimum number of bases between primer and gRNA (default = 15)" help=""/>
         <param name="print_summary" type="boolean" truevalue="--summary" falsevalue="" label="Write summary file and plot of the output"/>
         <param name="print_debug" type="boolean" truevalue="--debug" falsevalue="" label="Write additional GFF file with all amplicons designed by Primer3 and all gRNAs before filtering."/>
@@ -202,3 +210,4 @@
         TODO: Fill in help.
     ]]></help>
 </tool>
+
