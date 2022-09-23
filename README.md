@@ -1,2 +1,2 @@
 # galaxytools
-Collection of  Galaxy tool wrappers
+ELIXIR-BE Collection of  Galaxy tool wrappers
