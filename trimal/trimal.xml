@@ -23,6 +23,7 @@
                 <option value="-gappyout">gappyout. Only uses information based on gaps' distribution. (see User Guide)</option>
                 <option value="-strict">strict. (see User Guide)</option>
                 <option value="-strictplus">strictplus. (see User Guide)</option>
+                <option value="-automated1">automated</option>
                 <option value="custom">Custom mode</option>
             </param>
             <when value="custom">
@@ -92,6 +93,7 @@ Modes
     -gappyout                Use automatic selection on "gappyout" mode. This method only uses information based on gaps' distribution. (see User Guide).
     -strict                  Use automatic selection on "strict" mode. (see User Guide).
     -strictplus              Use automatic selection on "strictplus" mode. (see User Guide).
+    -automated1              Use an heuristic method to decide which is the best automated method for a given MSA.
     trimAl v1.4.rev15 build[2013-12-17]. 2009-2013. Salvador Capella-Gutierrez and Toni Gabaldón.
 
 Custom mode parameters
