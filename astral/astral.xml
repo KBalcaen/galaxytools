@@ -35,7 +35,7 @@
         </data>
     </outputs>
     <tests>
-        <test>
+        <test expect_num_outputs="3">
             <param name="input1" value="song_mammals.424.gene.tre"/>
             <param name="branch_annotation_level_selector" value="16" />
             <param name="lambda" value="2" />
@@ -117,14 +117,6 @@ Prior hyper-parameter
 
     ]]></help>
     <citations>
-        <citation type="bibtex">
-@misc{githubASTRAL,
-  author = {LastTODO, FirstTODO},
-  year = {TODO},
-  title = {ASTRAL},
-  publisher = {GitHub},
-  journal = {GitHub repository},
-  url = {https://github.com/smirarab/ASTRAL},
-}</citation>
+        <citation type="doi">doi:10.1186/s12859-018-2129-y</citation>
     </citations>
 </tool>
