@@ -11,7 +11,8 @@
         -i '$input1' 
         -t ${branch_annotation_level_selector}
         -o ./output.tre
-        -c $lambda 2> '$log_output'
+        -c $lambda 2>&1
+        | tee '$log_output'
         &&
         mv ./output.tre '$output'
         #if $branch_annotation_level_selector == "16" or $branch_annotation_level_selector == "32"
