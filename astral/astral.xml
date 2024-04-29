@@ -1,18 +1,27 @@
-<tool id="astral" name="ASTRAL-III. Tool for estimating an unrooted species tree given a set of unrooted gene trees." version="0.1.0" python_template_version="3.5">
+<tool id="astral" name="ASTRAL-III" version="@TOOL_VERSION@" profile="22.05">
+    <description>Estimating an unrooted species tree given a set of unrooted gene trees</description>
+    <macros>
+        <token name="@TOOL_VERSION@">5.7.8</token>
+    </macros>
     <requirements>
-        <requirement type="package" version="5.7.8">astral-tree</requirement>
+        <requirement type="package" version="@TOOL_VERSION@">astral-tree</requirement>
     </requirements>
     <command detect_errors="exit_code"><![CDATA[    
-        astral -i $input1 -t ${branch_annotation_level_selector} -o ./output.tre -c $lambda 2> $log_output
+        astral
+        -i '$input1' 
+        -t ${branch_annotation_level_selector}
+        -o ./output.tre
+        -c $lambda 2>&1
+        | tee '$log_output'
         &&
-        mv ./output.tre $output
+        mv ./output.tre '$output'
         #if $branch_annotation_level_selector == "16" or $branch_annotation_level_selector == "32"
             &&
-            mv freqQuad.csv $branch_annotations
-        #end if;
+            mv freqQuad.csv '$branch_annotations'
+        #end if
     ]]></command>
     <inputs>
-        <param name="input1" type="data" format="newick" multiple="false" label="Tree file" optional="false" />
+        <param name="input1" type="data" format="newick" optional="false" label="Tree file" multiple="false" />
         <param name="branch_annotation_level_selector" type="select" label="How much annotations should be added to each branch: 0, 1, or 2.">
             <option value="3">3 (default): only the posterior probability for the main resolution.</option>
             <option value="0">0: no annotations.</option>
@@ -24,12 +33,12 @@
             <option value="32">32: for file export of branch annotations to freqQuad.csv (see below).</option>
             <option value="10">10: p-values of a polytomy null hypothesis test. (default: 3)</option>
         </param>
-        <param name="lambda" type="float" optional="true" value="0.5" min="0.0" max="10.0" label="lambda" help="lambda parameter for the Yule prior used in the calculations of
-        branch lengths and posterior probabilities. Default: 0.5" multiple="false"/>
+        <param name="lambda" type="float" min="0.0" max="10.0" value="0.5" optional="true" label="lambda parameter for the Yule prior"
+            help="Used in the calculations of branch lengths and posterior probabilities."/>
     </inputs>
     <outputs>
         <data name="output" format="newick" label="Output tree file"/>
-        <data name="log_output" format="txt" label="Astral log."/>
+        <data name="log_output" format="txt" label="Astral log"/>
         <data name="branch_annotations" format="tabular" label="Branch annotations file.">
             <filter>branch_annotation_level_selector == '16' or branch_annotation_level_selector == '32'</filter>
         </data>
@@ -50,7 +59,7 @@
             </output>
             <output name="branch_annotations" file="freqQuad.csv" ftype="tabular"/>
         </test>
-        <test>
+        <test expect_num_outputs="2">
             <param name="input1" value="song_primates.424.gene.tre"/>
             <param name="branch_annotation_level_selector" value="0" />
             <param name="lambda" value="2" />
