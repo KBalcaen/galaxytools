@@ -1,4 +1,4 @@
-<tool id="astral" name="ASTRAL-III" version="@TOOL_VERSION@" profile="22.05">
+<tool id="astral" name="ASTRAL-III" version="@TOOL_VERSION@" profile="23.00">
     <description>Estimating an unrooted species tree given a set of unrooted gene trees</description>
     <macros>
         <token name="@TOOL_VERSION@">5.7.8</token>
