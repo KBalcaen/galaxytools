@@ -10,10 +10,10 @@
     #set working_dir = os.getcwd()
         
         astral
-        -i '$input1' 
-        -t ${branch_annotation_level_selector}
-        -o ./output.tre
-        -c $lambda 2>&1
+        --input '$input1' 
+        --branch-annotate ${branch_annotation_level_selector}
+        --output ./output.tre
+        --lambda $lambda 2>&1
         | tee '$log_output'
         &&
         mv ./output.tre '$output'
