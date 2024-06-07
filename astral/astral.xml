@@ -68,6 +68,9 @@ python '$__tool_directory__/version_command.py'
                 </assert_contents> 
             </output>
             <output name="branch_annotations" file="freqQuad.csv" ftype="tabular"/>
+            <assert_command_version>
+                <has_text text="@TOOL_VERSION@"/>
+            </assert_command_version>
         </test>
         <test expect_num_outputs="2">
             <param name="input1" value="song_primates.424.gene.tre"/>
@@ -82,13 +85,8 @@ python '$__tool_directory__/version_command.py'
                     <has_line line="Final quartet score is: 389734" />
                 </assert_contents>
             </output>
-        </test>
-        <test>
-            <assert_command>
-                <not_has_text text="VERSION"/>
-            </assert_command>
             <assert_command_version>
-                <has_text text="5.7.8" />
+                <has_text text="@TOOL_VERSION@"/>
             </assert_command_version>
         </test>
     </tests>
