@@ -101,10 +101,10 @@ Github: https://github.com/smirarab/ASTRAL
 ----
 
 **input**
-- The input gene trees are in the Newick format
+- The input gene trees are in the Newick format.
 
 **output**
-- The output is in Newick format
+- The output is in Newick format.
 
 **Newick annotations**
     - No annotations (-t 0): This turns off calculation and reporting of posterior probabilities and branch lengths.  
@@ -112,10 +112,7 @@ Github: https://github.com/smirarab/ASTRAL
     - Alternative quartet topologies (-t 8): Outputs q1, q2, q3; these three values show quartet support (as defined above) for the main topology (LR|SO), first alternative (RS|LO) and second alternative (RO|LS), respectively.  
     - Local posterior (-t 3): is the default where we show local posterior probability for the main topology.  
     - Alternative posteriors (-t 4): The output includes three local posterior probabilities: one for the main topology, and one for each of the two alternatives (RS|LO and RO|LS, in that order). The posterior of the three topologies adds up to 1. This is because of our locality assumption, which basically asserts that we assume the four groups around the branch (L, R, S, and O) are each correct and therefore, there are only three possible alternatives.
-    - Full annotation (-t 2): When you use this option, for each branch you get a lot of different measurements:
-        - q1,q2,q3: these three values show quartet support (as defined in the description of -t 1) for the main topology, the first alternative, and the second alternative, respectively.  
-        - f1, f2, f3: these three values show the total number of quartet trees in all the gene trees that support the main topology, the first alternative, and the second alternative, respectively.  
-        - pp1, pp2, pp3: these three show the local posterior probabilities (as defined in the description of -t 4) for the main topology, the first alternative, and the second alternative, respectively.  
+    - Full annotation (-t 2): When you use this option, for each branch you get a lot of different measurements. The values q1, q2 and q3 show quartet support (as defined in the description of -t 1) for the main topology, the first alternative, and the second alternative, respectively. The values f1, f2 and f3 show the total number of quartet trees in all the gene trees that support the main topology, the first alternative, and the second alternative, respectively. The values pp1, pp2 and pp3 show the local posterior probabilities (as defined in the description of -t 4) for the main topology, the first alternative, and the second alternative, respectively.  
     - QC: this shows the total number of quartets defined around each branch (this is what the paper calls *m*).
     - EN: this is the effective number of genes for the branch. If you don't have any missing data, this would be the number of branches in your tree. When there are missing data, some gene trees might have nothing to say about a branch. Thus, the effective number of genes might be smaller than the total number of genes.  
     - Polytomy test (-t 10): runs an experimental test to see if a null hypothesis that the branch is a polytomy could be rejected. See this paper: doi:10.3390/genes9030132.  
@@ -133,12 +130,8 @@ Github: https://github.com/smirarab/ASTRAL
     - 2nd column: the topology name for which we are giving the scores. Here, t1 is always the main topology (observed in your species tree) and t2 and t3 are the two alternatives.  
     - 3rd column: Gives the actual topology with the format: {A}|{B}#{C}|{D}. This means that the quartet topology being scored is putting groups A and B together on one side, and groups C and D on the other side. Please remember that quartets are unrooted trees. Each of the groups is a comma-separate list of species.  
     - 5th column: number of gene trees that match the the topology in this line. You will note that this number is not always an integer number. The reason is that in each gene tree, groups A, B, C, and D may not be together. Those gene trees still count as 1 unit, but they can contribute a fraction of that total of 1 to each of the tree topologies. So a gene tree may count as 0.7 for one topology, 0.2 for another, and 0.1 for the third.  
-    - 6th column: This is the total number of gene trees that had any useful information about this branch.  
-        - If you have no missing data, this should equal the total number of gene trees.  
-        - If you have missing data, some genes may be missing one of groups A, B, C, or D entirely. Those genes will be agnostic about this branch. This column gives the number of genes that have at least one species from each of A, B, C, and D.  
-    - 4th column is likely you are interested in and it depends on whether you used -t 16 or -t 32.  
-        - -t 16: This column is the local posterior for the topology given in this line. Note that the local posterior probability is different from normalized quartet score. See Figure 2 of the paper.  
-        - -t 32: This column is simply 5th column divided by 6 column. Thus, it gives the normalized quartet score for that topology. Note that the three lines with the same node name (1st column) will add up to one in their 4th column.  
+    - 6th column: This is the total number of gene trees that had any useful information about this branch. If you have no missing data, this should equal the total number of gene trees. If you have missing data, some genes may be missing one of groups A, B, C, or D entirely. Those genes will be agnostic about this branch. This column gives the number of genes that have at least one species from each of A, B, C, and D.  
+    - 4th column is likely you are interested in and it depends on whether you used -t 16 or -t 32. The -t 16 column is the local posterior for the topology given in this line. Note that the local posterior probability is different from normalized quartet score. See Figure 2 of the paper. The -t 32 column is simply 5th column divided by the 6th column. Thus, it gives the normalized quartet score for that topology. Note that the three lines with the same node name (1st column) will add up to one in their 4th column.  
 
 Prior hyper-parameter
     Our calculations of the local posterior probabilities and branch lengths use a Yule prior model for the branch lengths of the species tree. 
