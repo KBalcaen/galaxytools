@@ -1,7 +1,6 @@
-categories:
-- Phylogenetics
-description: Tool for estimating an unrooted species tree given a set of unrooted
-  gene trees
+name: astral
+owner: padge
+description: Tool for estimating an unrooted species tree given a set of unrooted gene trees
 homepage_url: https://github.com/smirarab/ASTRAL
 long_description: ASTRAL is a tool for estimating a species tree given a set of unrooted
   gene trees. ASTRAL is statistically consistent under multi-species coalescent model
@@ -11,6 +10,6 @@ long_description: ASTRAL is a tool for estimating a species tree given a set of 
   for a constrained version of the problem that restricts the search space. An exact
   solution to the unconstrained version is also implemented and can run on small datasets
   (less than 18 taxa).
-name: astral
-owner: padge
-remote_repository_url: https://github.com/smirarab/ASTRAL
+remote_repository_url: https://github.com/usegalaxy-be/galaxytools/tree/main/astral
+categories:
+- Phylogenetics
