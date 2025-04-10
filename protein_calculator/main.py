@@ -1,7 +1,7 @@
 ################################################################################################
 # This tool was developed by Kevin Balcaen for usage by the VIB Protein Core staff.            #
 # Grateful acknowledgment to Robbe Fonteyn for the error checking on the code and proofreading.#
-# The tool is updated to usegalaxy.be #
+# The tool is updated to usegalaxy.be ##
 ################################################################################################
 
 from json import dumps
