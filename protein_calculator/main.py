@@ -12,6 +12,8 @@ from Calculate_protein_properties import (get_isoelectric_point, calculate_dn_dc
                                           calculate_extinction_coefficient, get_net_charge)
 from Sequence_functions import normalize_sequence, check_protein_sequence, format_sequence, letter_count
 from references import amino_acid_data
+from jinja2 import Environment, FileSystemLoader
+
 
 def main():
     parser = argparse.ArgumentParser(description='Process some sequences.')
@@ -108,7 +110,11 @@ def main():
     colors = ['#3ABBBA', '#5A2A82', '#FF681E']
     titration_curve = px.line(df, x="pH", y="Net Charges", color_discrete_sequence=colors)
     titration_curve.update_layout(title_text="Titration Curve", title_x=0.5)
+    titration_curve.write_html("plot.html") # output interactive plot
+    #titration_plot = titration_curve.write_html("plot.html")
+
     titration_json = dumps(titration_curve, cls=utils.PlotlyJSONEncoder)
+    
 
     dn_dc_value = round(calculate_dn_dc(sequence, amino_acid_data), 6)
 
@@ -125,6 +131,41 @@ def main():
     print(f'Net Charge at Different pH: {net_charge_at_different_pH}')
     print(f'Titration Curve JSON: {titration_json}')
     print(f'dn/dc Value: {dn_dc_value}')
+
+    #############################
+    #  Render HTML using Jinja2 #
+    #############################
+
+    # Set up the Jinja2 environment
+    env = Environment(loader=FileSystemLoader('templates'))
+
+    # Load the results.html template
+    template = env.get_template('results.html')
+
+    # Data to render in the template
+    data = {
+        "name":name,
+        "sequence":sequence_formatted,
+        "sequence2":sequence,
+        "amino_acid_composition":amino_acid_composition,
+        "number_info":number_info,
+        "molecular_weight_info":molecular_weight_info,
+        "molar_absorbance_info":molar_absorbance_info,
+        "pI":pI,
+        "net_charge_at_different_pH":net_charge_at_different_pH,
+        "titration_json":titration_json,
+        "titration_curve":titration_curve,
+        "dn_dc_value":dn_dc_value
+    }
+
+    # Render the template with data
+    output = template.render(data)
+
+    # Save or display the rendered output
+    with open('report.html', 'w') as f:
+        f.write(output)
+
+    print("HTML rendered and saved to report.html.")
 
 if __name__ == '__main__':
     main()

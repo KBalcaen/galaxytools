@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.26.2.min.js"></script>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -41,7 +41,6 @@
             }
         }
     </style>
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
@@ -153,7 +152,6 @@
     <h2>Isoelectric Point (pI)</h2>
     <p>pI: {{ pI }}</p>
 
-    <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Net Charge at Different pH Values</title>
@@ -166,9 +164,7 @@
                 margin-right: 20px;
             }
         </style>
-    </head>
 
-    <body>
         <div class="container">
             <div class="table-container">
                 <h2>Net Charge at Different pH Values</h2>
@@ -196,11 +192,11 @@
                 <script type="text/javascript">
 
                         // here is where the JSON gets plugged in via JS
-                        var titration_curve = {{titration_json | safe}};
-
+                        var titration_curve = {{titration_json | tojson | safe}};
+                        
                         // you target the graph div id in the first arg,
                         // put your graph in the second, and set the third as {}
-                        Plotly.plot("titration-curve-json-plotly", titration_curve, {});
+                        Plotly.newPlot("titration-curve-json-plotly", titration_curve, {});
 
                 </script>
             </div>
@@ -234,6 +230,5 @@
         a.click();
     });
 </script>
-</body>
 </body>
 </html>
