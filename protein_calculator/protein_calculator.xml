@@ -12,7 +12,9 @@
         <requirement type="package" version="3.1.6">jinja2</requirement>
     </requirements>
     <stdio>
-        <regex match="Error" source="both" level="fatal" description="Protein sequence contains invalid character(s). Please enter a valid Protein Sequence."/>
+        <regex match="invalid character" source="both" level="fatal" description="Protein sequence contains invalid character(s). Please enter a valid Protein Sequence."/>
+        <regex match="minimum length" source="both" level="fatal" description="Protein sequence should have a minimum length of 10 residues. Please enter a valid Protein Sequence."/>
+
     </stdio>
     <command detect_errors="exit_code"><![CDATA[
         cp -r "$__tool_directory__/templates" . &&
@@ -32,8 +34,8 @@
     #end if
     ]]></command>
     <inputs>
-        <param argument="--name" type="text" label="protein name" help="Name of the protein" optional="false" />
-        <param argument="--sequence" type="text" label="protein sequence" help="Sequence to be processed" optional="false"/>
+        <param argument="--name" type="text" label="Protein name" help="Name of the protein" optional="false" />
+        <param argument="--sequence" type="text" label="Protein sequence" help="Sequence to be processed. Protein sequence should have a minimum length of 10 residues." optional="false"/>
 
     </inputs>
     <outputs>
