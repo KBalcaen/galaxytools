@@ -1,4 +1,9 @@
-<tool id="protein_calculator" name="Protein Calculator from the VIB Protein Core" version="0.1.0+galaxy0" python_template_version="3.5" profile="21.05">
+<tool id="protein_calculator" name="Protein Calculator" version="@TOOL_VERSION@+galaxy@VERSION_SUFFIX@" python_template_version="3.5" profile="21.05" license="MIT">
+    <description>by the VIB Protein Core</description>
+    <macros>
+        <token name="@TOOL_VERSION@">0.1.0</token>
+        <token name="@VERSION_SUFFIX@">0</token>
+    </macros>
     <requirements>
         <requirement type="package" version="3.9">python</requirement>
         <requirement type="package" version="2.2.3">pandas</requirement>
@@ -6,6 +11,9 @@
         <requirement type="package" version="1.85">biopython</requirement>
         <requirement type="package" version="3.1.6">jinja2</requirement>
     </requirements>
+    <stdio>
+        <regex match="Error" source="both" level="fatal" description="Protein sequence contains invalid character(s). Please enter a valid Protein Sequence."/>
+    </stdio>
     <command detect_errors="exit_code"><![CDATA[
         cp -r "$__tool_directory__/templates" . &&
         python '$__tool_directory__/main.py'
@@ -24,8 +32,8 @@
     #end if
     ]]></command>
     <inputs>
-        <param argument="--name" type="text" label="protein name" help="Name of the protein" />
-        <param argument="--sequence" type="text" label="protein sequence" help="Sequence to be processed"/>
+        <param argument="--name" type="text" label="protein name" help="Name of the protein" optional="false" />
+        <param argument="--sequence" type="text" label="protein sequence" help="Sequence to be processed" optional="false"/>
 
     </inputs>
     <outputs>
@@ -46,9 +54,12 @@
 Process some sequences.
 
 optional arguments:
-  -h, --help           show this help message and exit
-  --name NAME          Name of the protein
-  --sequence SEQUENCE  Sequence to be processed
+  -h, --help                           show this help message and exit  
+
+  --name NAME                          Name of the protein  
+
+  --sequence SEQUENCE                  Sequence to be processed  
+  
 
     ]]></help>
     <citations>
