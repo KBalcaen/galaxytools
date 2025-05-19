@@ -65,7 +65,7 @@ optional arguments:
     <citations>
         <citation type="bibtex">
 @misc{githubProtein_Calculator,
-  author = {Balcaen, Kevin}, {Fonteyn, Robbe}
+  author = {Balcaen, Kevin and Fonteyn, Robbe},
   year = {2025},
   title = {Protein_Calculator},
   publisher = {GitHub},
