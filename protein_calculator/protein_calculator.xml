@@ -58,7 +58,9 @@ optional arguments:
 
   --name NAME                          Name of the protein  
 
-  --sequence SEQUENCE                  Sequence to be processed  
+  --sequence SEQUENCE                  Sequence to be processed
+
+  -v, --version                        show the version of the tool and exit
   
 
     ]]></help>

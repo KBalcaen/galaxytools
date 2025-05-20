@@ -14,11 +14,13 @@ from Sequence_functions import normalize_sequence, check_protein_sequence, forma
 from references import amino_acid_data
 from jinja2 import Environment, FileSystemLoader
 
+VERSION = '1.0.0'
 
 def main():
     parser = argparse.ArgumentParser(description='Process some sequences.')
     parser.add_argument('--name', type=str, required=True, help='Name of the protein')
     parser.add_argument('--sequence', type=str, required=True, help='Sequence to be processed')
+    parser.add_argument('-v', '--version', action='version', version=f'%(prog)s {VERSION}', help='Show the version of the tool and exit')
 
     args = parser.parse_args()
 
