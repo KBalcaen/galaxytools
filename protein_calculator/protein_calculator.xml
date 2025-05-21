@@ -16,9 +16,10 @@
         <regex match="minimum length" source="both" level="fatal" description="Protein sequence should have a minimum length of 10 residues. Please enter a valid Protein Sequence."/>
 
     </stdio>
+    <version_command>python '$__tool_directory__/protein_calculator.py' --version</version_command>
     <command detect_errors="exit_code"><![CDATA[
         cp -r "$__tool_directory__/templates" . &&
-        python '$__tool_directory__/main.py'
+        python '$__tool_directory__/protein_calculator.py'
     #if $name:
         --name '$name'
     #else:
@@ -51,24 +52,26 @@
         </test>
     </tests>
     <help><![CDATA[
-        usage: main.py [-h] --name NAME --sequence SEQUENCE
+        usage: protein_calculator.py [-h] --name NAME --sequence SEQUENCE
 
-Process some sequences.
+This tool will determine protein properties based on the amino acid sequence. The maximum allowed sequence is set at 3.000 amino acids.
 
 optional arguments:
   -h, --help                           show this help message and exit  
 
   --name NAME                          Name of the protein  
 
-  --sequence SEQUENCE                  Sequence to be processed  
+  --sequence SEQUENCE                  Sequence to be processed
+
+  -v, --version                        show the version of the tool and exit
   
 
     ]]></help>
     <citations>
         <citation type="bibtex">
 @misc{githubProtein_Calculator,
-  author = {LastTODO, FirstTODO},
-  year = {TODO},
+  author = {Balcaen, Kevin and Fonteyn, Robbe},
+  year = {2025},
   title = {Protein_Calculator},
   publisher = {GitHub},
   journal = {GitHub repository},
