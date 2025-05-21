@@ -51,14 +51,16 @@
     <help><![CDATA[
         usage: main.py [-h] --name NAME --sequence SEQUENCE
 
-Process some sequences.
+This tool will determine protein properties based on the amino acid sequence. The maximum allowed sequence is set at 3.000 amino acids.
 
 optional arguments:
   -h, --help                           show this help message and exit  
 
   --name NAME                          Name of the protein  
 
-  --sequence SEQUENCE                  Sequence to be processed  
+  --sequence SEQUENCE                  Sequence to be processed
+
+  -v, --version                        show the version of the tool and exit
   
 
     ]]></help>

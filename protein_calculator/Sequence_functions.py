@@ -11,6 +11,7 @@ def check_protein_sequence(sequence):
     DNA_pattern = re.compile(r'^[ACTG]+$', re.IGNORECASE)
     seq_length = len(sequence)
     min_seq_length = 10
+    max_seq_length = 3000
 
     # Check if sequence is a valid DNA sequence
     if DNA_pattern.match(sequence):
@@ -25,9 +26,17 @@ def check_protein_sequence(sequence):
                 f"Sequence.")
             return error_message
 
+    # Check if sequence is a valid protein sequence of minimum 10 amino acids
     if seq_length < min_seq_length:
         error_message = (f"Protein sequence should have a minimum length of 10 residues, the input sequence has a "
                          f"length of {seq_length}.")
+        return error_message
+
+    # Check if sequence is a valid protein sequence of max 3000 amino acids
+    if seq_length > max_seq_length:
+        error_message = (f"Protein sequence exceeds the maximum allowed length of {max_seq_length} amino acids. "
+                         f"Please shorten the sequence and try again. If longer sequences are required, please contact "
+                         f"the tool developer for further assistance.")
         return error_message
 
     return None
