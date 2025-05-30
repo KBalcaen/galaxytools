@@ -4,8 +4,14 @@
         <token name="@TOOL_VERSION@">0.1.0</token>
         <token name="@VERSION_SUFFIX@">0</token>
     </macros>
+    <!-- <edam_topics>
+        <edam_topic></edam_topic>
+    </edam_topics> -->
+    <edam_operations>
+        <edam_operation>operation_0250</edam_operation>
+    </edam_operations>
     <requirements>
-        <requirement type="package" version="3.9">python</requirement>
+        <requirement type="package" version="3.13.3">python</requirement>
         <requirement type="package" version="2.2.3">pandas</requirement>
         <requirement type="package" version="6.0.1">plotly</requirement>
         <requirement type="package" version="1.85">biopython</requirement>
@@ -18,19 +24,19 @@
     </stdio>
     <version_command>python '$__tool_directory__/protein_calculator.py' --version</version_command>
     <command detect_errors="exit_code"><![CDATA[
-        cp -r "$__tool_directory__/templates" . &&
+        cp -r '$__tool_directory__/templates' . &&
         python '$__tool_directory__/protein_calculator.py'
     #if $name:
         --name '$name'
     #else:
-        echo "Error: Protein name is required." >&2
+        echo 'Error: Protein name is required.' >&2
         exit 1
     #end if
 
     #if $sequence:
         --sequence '$sequence'
     #else:
-        echo "Error: Protein sequence is required." >&2
+        echo 'Error: Protein sequence is required.' >&2
         exit 1
     #end if
     ]]></command>
