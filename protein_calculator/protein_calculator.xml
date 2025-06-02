@@ -51,9 +51,9 @@
     </outputs>
     <tests>
         <test>
-            <param name="name" value="Protein1"/>
-            <param name="sequence" value="LLLLLLEEEEEVVVV"/>
-            <output name="output1" file="report.html" lines_diff="24"/>
+            <param name="name" value="test_name"/>
+            <param name="sequence" value="EASTEREGGEGG"/>
+            <output name="output1" file="report.html" lines_diff="1"/>
             <output name="output2" file="plot.html" lines_diff="2"/>
         </test>
     </tests>
@@ -87,13 +87,13 @@ Arguments:
     ]]></help>
     <citations>
         <citation type="bibtex">
-@misc{githubProtein_Calculator,
-  author = {Balcaen, Kevin and Fonteyn, Robbe},
-  year = {2025},
-  title = {Protein_Calculator},
-  publisher = {GitHub},
-  journal = {GitHub repository},
-  url = {https://github.com/KBalcaen/Protein_Calculator},
+        @misc{githubProtein_Calculator,
+        author = {Balcaen, Kevin and Fonteyn, Robbe},
+        year = {2025},
+        title = {Protein_Calculator},
+        publisher = {GitHub},
+        journal = {GitHub repository},
+        url = {https://github.com/KBalcaen/Protein_Calculator},
 }</citation>
     </citations>
 </tool>
