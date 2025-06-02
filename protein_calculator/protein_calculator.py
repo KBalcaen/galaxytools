@@ -112,11 +112,26 @@ def main():
     colors = ['#3ABBBA', '#5A2A82', '#FF681E']
     titration_curve = px.line(df, x="pH", y="Net Charges", color_discrete_sequence=colors)
     titration_curve.update_layout(title_text="Titration Curve", title_x=0.5)
-    titration_curve.write_html("plot.html") # output interactive plot
-    #titration_plot = titration_curve.write_html("plot.html")
+
+    # write the interactive plot to an HTML file
+    file_path = "plot.html"
+    titration_curve.write_html(file_path)
+
+    # ensure the file starts with <!DOCTYPE html>, as otherwise Galaxy will not render it as an HTML file
+    with open(file_path, "r", encoding="utf-8") as file:
+        html_content = file.read()
+
+    # add <!DOCTYPE html> at the beginning if it's missing
+    if not html_content.lstrip().startswith("<!DOCTYPE html>"):
+        html_content = f"<!DOCTYPE html>\n{html_content}"
+
+    # Overwrite the file with the updated content
+    with open(file_path, "w", encoding="utf-8") as file:
+        file.write(html_content)
+
+    print(f"HTML file saved with <!DOCTYPE html> at the start (so Galaxy properly detects it as an html file): {file_path}")
 
     titration_json = dumps(titration_curve, cls=utils.PlotlyJSONEncoder)
-    
 
     dn_dc_value = round(calculate_dn_dc(sequence, amino_acid_data), 6)
 
