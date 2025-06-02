@@ -14,7 +14,7 @@ from Sequence_functions import normalize_sequence, check_protein_sequence, forma
 from references import amino_acid_data
 from jinja2 import Environment, FileSystemLoader
 
-VERSION = '1.0.0'
+VERSION = '1.0.1'
 
 def main():
     parser = argparse.ArgumentParser(description='Process some sequences.')
