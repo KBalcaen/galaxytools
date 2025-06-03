@@ -129,7 +129,7 @@ def main():
     with open(file_path, "w", encoding="utf-8") as file:
         file.write(html_content)
 
-    print(f"HTML file saved with <!DOCTYPE html> at the start (so Galaxy properly detects it as an html file): {file_path}")
+    # HTML file saved with <!DOCTYPE html> at the start (so Galaxy properly detects it as an html file)
 
     titration_json = dumps(titration_curve, cls=utils.PlotlyJSONEncoder)
 
