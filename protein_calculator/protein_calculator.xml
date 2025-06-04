@@ -16,6 +16,7 @@
         <requirement type="package" version="6.0.1">plotly</requirement>
         <requirement type="package" version="1.85">biopython</requirement>
         <requirement type="package" version="3.1.6">jinja2</requirement>
+        <requirement type="package" version="0.2.1">python-kaleido</requirement>
     </requirements>
     <stdio>
         <regex match="invalid character" source="both" level="fatal" description="Protein sequence contains invalid character(s). Please enter a valid Protein Sequence."/>
@@ -46,15 +47,18 @@
 
     </inputs>
     <outputs>
-        <data name="output1" format="html" from_work_dir="report.html" label="report" />
-        <data name="output2" format="html" from_work_dir="plot.html" label="titration curve" />
+        <data name="output1" format="html" from_work_dir="report.html" label="$name - report" />
+        <data name="output2" format="png" from_work_dir="plot.png" label="$name - titration curve" />
+        <data name="output3" format="html" from_work_dir="plot.html" label="$name - titration curve (interactive)" />
+
     </outputs>
     <tests>
         <test>
             <param name="name" value="test_name"/>
             <param name="sequence" value="EASTEREGGEGG"/>
             <output name="output1" file="report.html" lines_diff="1"/>
-            <output name="output2" file="plot.html" lines_diff="2"/>
+            <output name="output2" file="plot.png" lines_diff="1"/>
+            <output name="output3" file="plot.html" lines_diff="2"/>
         </test>
     </tests>
     <help><![CDATA[

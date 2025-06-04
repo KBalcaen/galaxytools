@@ -129,8 +129,10 @@ def main():
     with open(file_path, "w", encoding="utf-8") as file:
         file.write(html_content)
 
-    # HTML file saved with <!DOCTYPE html> at the start (so Galaxy properly detects it as an html file)
-
+    # Save the titration curve as a PNG image
+    titration_png = "plot.png"
+    titration_curve.write_image(titration_png, format="png")
+    
     titration_json = dumps(titration_curve, cls=utils.PlotlyJSONEncoder)
 
     dn_dc_value = round(calculate_dn_dc(sequence, amino_acid_data), 6)
@@ -171,6 +173,7 @@ def main():
         "pI":pI,
         "net_charge_at_different_pH":net_charge_at_different_pH,
         "titration_json":titration_json,
+        "titration_png":titration_png,
         "titration_curve":titration_curve,
         "dn_dc_value":dn_dc_value
     }
