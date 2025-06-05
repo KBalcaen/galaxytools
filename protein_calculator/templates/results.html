@@ -186,21 +186,11 @@
                 </table>
             </div>
             <div class="plot-container">
-                 <!-- <img src="data:image/png;base64,{{ base64_string }}" alt="Titration Curve was here" />  -->
+
                 <div id='titration-curve-json-plotly'></div>
                 <p> </p>
-
-                <script type="text/javascript">
-
-                    // Display the PNG image in the report
-                    var titration_png = "{{ titration_png }}";
-                    var imgElement = document.createElement("img");
-                    imgElement.src = titration_png;
-                    imgElement.alt = "Titration Curve";
-                    imgElement.style.maxWidth = "100%"; // Ensure it scales properly
-                    document.querySelector(".plot-container").appendChild(imgElement);
-
-                </script>
+                  <!-- Display the PNG image as Base64 -->
+                <img src="data:image/png;base64,{{ titration_png_base64 }}" alt="Titration Curve was here" style="max-width: 100%" />
             </div>
         </div>
         <p> An interactive titration curve (Plotly graph) can be found as a second output in your Galaxy history.</p>

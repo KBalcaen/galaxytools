@@ -13,8 +13,9 @@ from Calculate_protein_properties import (get_isoelectric_point, calculate_dn_dc
 from Sequence_functions import normalize_sequence, check_protein_sequence, format_sequence, letter_count
 from references import amino_acid_data
 from jinja2 import Environment, FileSystemLoader
+import base64
 
-VERSION = '1.0.1'
+VERSION = '1.0.2'
 
 def main():
     parser = argparse.ArgumentParser(description='Process some sequences.')
@@ -125,16 +126,22 @@ def main():
     if not html_content.lstrip().startswith("<!DOCTYPE html>"):
         html_content = f"<!DOCTYPE html>\n{html_content}"
 
-    # Overwrite the file with the updated content
+    # overwrite the file with the updated content
     with open(file_path, "w", encoding="utf-8") as file:
         file.write(html_content)
 
-    # Save the titration curve as a PNG image
+    # save the titration curve as a PNG image
     titration_png = "plot.png"
     titration_curve.write_image(titration_png, format="png")
-    
+
+    # convert the PNG file to a Base64 string
+    with open(titration_png, "rb") as png_file:
+        titration_png_base64 = base64.b64encode(png_file.read()).decode("utf-8")
+
+    # save titration json
     titration_json = dumps(titration_curve, cls=utils.PlotlyJSONEncoder)
 
+    # calculate dn/dc value
     dn_dc_value = round(calculate_dn_dc(sequence, amino_acid_data), 6)
 
     # Print Results
@@ -173,7 +180,7 @@ def main():
         "pI":pI,
         "net_charge_at_different_pH":net_charge_at_different_pH,
         "titration_json":titration_json,
-        "titration_png":titration_png,
+        "titration_png_base64":titration_png_base64,
         "titration_curve":titration_curve,
         "dn_dc_value":dn_dc_value
     }
