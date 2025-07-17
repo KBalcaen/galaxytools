@@ -17,16 +17,41 @@ import base64
 
 VERSION = '1.0.2'
 
-def main():
-    parser = argparse.ArgumentParser(description='Process some sequences.')
+
+def parse_arguments():
+    parser = argparse.ArgumentParser(description='Process a protein sequence or FASTA file.')
+
+    # Verplicht argument: naam van het eiwit
     parser.add_argument('--name', type=str, required=True, help='Name of the protein')
-    parser.add_argument('--sequence', type=str, required=True, help='Sequence to be processed')
-    parser.add_argument('-v', '--version', action='version', version=f'%(prog)s {VERSION}', help='Show the version of the tool and exit')
 
-    args = parser.parse_args()
+    # OF een sequentie OF een FASTA-bestand
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('--sequence', type=str, help='Protein sequence to be processed')
+    group.add_argument('--fasta', type=str, help='Path to a FASTA file containing the sequence')
 
+    # Versie-optie
+    parser.add_argument('-v', '--version', action='version', version=f'%(prog)s {VERSION}',
+                        help='Show the version of the tool and exit')
+
+    return parser.parse_args()
+
+
+def read_sequence_from_fasta(fasta_path):
+    """Leest een sequentie uit een FASTA-bestand (en negeert de header)."""
+    with open(fasta_path, 'r') as f:
+        lines = f.readlines()
+        sequence = ''.join(line.strip() for line in lines if not line.startswith('>'))
+    return sequence.upper()
+
+
+def main():
+    args = parse_arguments()
     name = args.name
-    sequence = args.sequence.upper()
+    # Bepaal de sequentiebron
+    if args.sequence:
+        sequence = args.sequence.upper()
+    else:
+        sequence = read_sequence_from_fasta(args.fasta)
 
     # Normaliseer de sequentie om spaties en enters te verwijderen en controleer de geldigheid van de sequentie
     sequence = normalize_sequence(sequence)
@@ -189,7 +214,7 @@ def main():
     output = template.render(data)
 
     # Save or display the rendered output
-    with open('report.html', 'w') as f:
+    with open('report.html', 'w', encoding="utf-8") as f:
         f.write(output)
 
     print("HTML rendered and saved to report.html.")
