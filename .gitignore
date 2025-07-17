@@ -72,3 +72,5 @@ tool_test_output.json
 
 # VScode configuration
 .vscode
+
+.idea/
