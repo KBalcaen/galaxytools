@@ -35,3 +35,7 @@ planemo tool_init --force \
                     --help_from_command 'python main.py --help' \
 		    --autopygen main.py
 ```
+
+- Write wrapper and include tests. Test locally with `planemo t` and graphically with `planemo s`.
+
+- Merge to main and test on https://test.usegalaxy.be.  
