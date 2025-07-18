@@ -70,7 +70,7 @@ The maximum allowed sequence is set at 3.000 amino acids.
 
     .. class:: infomark
 
-Usage: ``protein_calculator.py [-h] --name NAME --sequence SEQUENCE``
+Usage: ``protein_calculator.py [-h] --name NAME --sequence SEQUENCE`` or ``protein_calculator.py [-h] --name NAME --fasta \location\file.fasta``
 
 
 Arguments:
@@ -83,6 +83,9 @@ Arguments:
 
 --sequence                       
             Sequence to be processed, in text format
+
+-- fasta
+            Location of the .fasta file, in FASTA format
 
 -v, --version                        
             Show the version of the tool and exit
