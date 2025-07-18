@@ -14,27 +14,23 @@ from Sequence_functions import normalize_sequence, check_protein_sequence, forma
 from references import amino_acid_data
 from jinja2 import Environment, FileSystemLoader
 import base64
+import os
 
 VERSION = '1.0.2'
-
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Process a protein sequence or FASTA file.')
 
-    # Verplicht argument: naam van het eiwit
+    # Definitie van de argumenten
+    parser.add_argument('--sequence', type=str, required=True,
+                        help='Protein sequence or path to a FASTA file')
+
     parser.add_argument('--name', type=str, required=True, help='Name of the protein')
 
-    # OF een sequentie OF een FASTA-bestand
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('--sequence', type=str, help='Protein sequence to be processed')
-    group.add_argument('--fasta', type=str, help='Path to a FASTA file containing the sequence')
-
-    # Versie-optie
     parser.add_argument('-v', '--version', action='version', version=f'%(prog)s {VERSION}',
                         help='Show the version of the tool and exit')
 
     return parser.parse_args()
-
 
 def read_sequence_from_fasta(fasta_path):
     """Leest een sequentie uit een FASTA-bestand (en negeert de header)."""
@@ -43,15 +39,17 @@ def read_sequence_from_fasta(fasta_path):
         sequence = ''.join(line.strip() for line in lines if not line.startswith('>'))
     return sequence.upper()
 
+def resolve_sequence(sequence_input):
+    """Detecteert of de input een bestand is en leest de sequentie in indien nodig."""
+    if os.path.isfile(sequence_input):
+        return read_sequence_from_fasta(sequence_input)
+    else:
+        return sequence_input.upper()
 
 def main():
     args = parse_arguments()
     name = args.name
-    # Bepaal de sequentiebron
-    if args.sequence:
-        sequence = args.sequence.upper()
-    else:
-        sequence = read_sequence_from_fasta(args.fasta)
+    sequence = resolve_sequence(args.sequence)
 
     # Normaliseer de sequentie om spaties en enters te verwijderen en controleer de geldigheid van de sequentie
     sequence = normalize_sequence(sequence)
